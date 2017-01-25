@@ -1,12 +1,6 @@
 package com.zireck.requestcache.library;
 
-import android.util.Log;
-import com.zireck.requestcache.library.network.BaseNetworkApi;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
+import com.zireck.requestcache.library.executor.RequestsExecutor;
 
 public class RequestCacheManager implements RequestCache {
 
@@ -14,8 +8,7 @@ public class RequestCacheManager implements RequestCache {
 
   private static RequestCacheManager INSTANCE = null;
 
-  private Retrofit retrofit;
-  private BaseNetworkApi baseNetworkApi;
+  private final RequestsExecutor requestsExecutor;
 
   public static RequestCacheManager getInstance() {
     if (INSTANCE == null) {
@@ -26,7 +19,7 @@ public class RequestCacheManager implements RequestCache {
   }
 
   private RequestCacheManager() {
-
+    requestsExecutor = new RequestsExecutor();
   }
 
   @Override public void enqueueRequests() {
