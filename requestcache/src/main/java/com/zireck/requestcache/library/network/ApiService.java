@@ -7,7 +7,7 @@ import retrofit2.http.GET;
 import retrofit2.http.QueryMap;
 import retrofit2.http.Url;
 
-public interface BaseApiService {
+public interface ApiService {
   @GET Call<ResponseBody> requestGet(@Url String url);
 
   @GET Call<ResponseBody> requestGet(@Url String url,

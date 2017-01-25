@@ -1,6 +1,8 @@
 package com.zireck.requestcache.library;
 
 import com.zireck.requestcache.library.executor.RequestsExecutor;
+import com.zireck.requestcache.library.network.ApiService;
+import com.zireck.requestcache.library.network.ApiServiceBuilder;
 
 public class RequestCacheManager implements RequestCache {
 
@@ -8,6 +10,8 @@ public class RequestCacheManager implements RequestCache {
 
   private static RequestCacheManager INSTANCE = null;
 
+  private final ApiServiceBuilder apiServiceBuilder;
+  private final ApiService apiService;
   private final RequestsExecutor requestsExecutor;
 
   public static RequestCacheManager getInstance() {
@@ -19,7 +23,9 @@ public class RequestCacheManager implements RequestCache {
   }
 
   private RequestCacheManager() {
-    requestsExecutor = new RequestsExecutor();
+    apiServiceBuilder = new ApiServiceBuilder();
+    apiService = apiServiceBuilder.build();
+    requestsExecutor = new RequestsExecutor(apiService);
   }
 
   @Override public void enqueueRequests() {
