@@ -100,15 +100,27 @@ public class PendingRequestsExecutor implements RequestExecutor {
   private void setupRetrofitCallback() {
     retrofitCallback = new Callback<ResponseBody>() {
       @Override public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-        requestQueue.remove();
-        requestQueue.persist();
-        executorTimer.start();
+        if (response.isSuccessful()) {
+          handleSuccessfulResponse();
+        } else {
+          handleUnsuccessfulResponse();
+        }
       }
 
       @Override public void onFailure(Call<ResponseBody> call, Throwable t) {
-        executorTimer.start();
+        handleUnsuccessfulResponse();
       }
     };
+  }
+
+  private void handleSuccessfulResponse() {
+    requestQueue.remove();
+    requestQueue.persist();
+    executorTimer.start();
+  }
+
+  private void handleUnsuccessfulResponse() {
+    executorTimer.start();
   }
 
   private Call<ResponseBody> handlePostRequest(RequestModel requestModel, String requestUrl) {
