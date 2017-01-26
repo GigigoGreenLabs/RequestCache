@@ -7,6 +7,10 @@ import android.widget.Button;
 import android.widget.Toast;
 import com.zireck.requestcache.library.RequestCache;
 import com.zireck.requestcache.library.RequestCacheManager;
+import com.zireck.requestcache.library.model.RequestModel;
+import com.zireck.requestcache.library.util.MethodType;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -19,7 +23,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
-    requestCache = RequestCacheManager.getInstance();
+    requestCache = RequestCacheManager.getInstance(this);
 
     enqueueView = (Button) findViewById(R.id.enqueue);
     sendView = (Button) findViewById(R.id.send);
@@ -33,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
   @Override public void onClick(View view) {
     if (view == enqueueView) {
       showAlertWith("Enqueuing requests");
-      requestCache.enqueueRequests();
+      requestCache.enqueueRequests(getRequests());
     } else if (view == sendView) {
       showAlertWith("Sending pending requests");
       requestCache.sendPendingRequests();
@@ -45,5 +49,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
   private void showAlertWith(String message) {
     Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+  }
+
+  private List<RequestModel> getRequests() {
+    List<RequestModel> requestModels = new ArrayList<>();
+
+    for (int i=0; i<5; i++) {
+      requestModels.add(getRequest());
+    }
+
+    return requestModels;
+  }
+
+  private RequestModel getRequest() {
+    return new RequestModel.Builder<>()
+        .methodType(MethodType.GET)
+        .baseUrl("https://api.github.com/")
+        .endpoint("users/GigigoGreenLabs/repos")
+        .build();
   }
 }

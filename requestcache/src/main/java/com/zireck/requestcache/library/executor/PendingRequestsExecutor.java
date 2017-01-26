@@ -14,7 +14,7 @@ import retrofit2.Response;
 public class PendingRequestsExecutor implements RequestExecutor {
 
   private static final String TAG = PendingRequestsExecutor.class.getSimpleName();
-  private static final int REQUEST_INTERVAL_IN_MILLIS = 5000;
+  private static final int DEFAULT_REQUEST_INTERVAL_IN_MILLIS = 5000;
 
   private Callback<ResponseBody> retrofitCallback;
   private CountDownTimer executorTimer;
@@ -25,7 +25,7 @@ public class PendingRequestsExecutor implements RequestExecutor {
   public PendingRequestsExecutor(ApiService apiService) {
     this.apiService = apiService;
     setupRetrofitCallback();
-    setupTimer(REQUEST_INTERVAL_IN_MILLIS);
+    setupTimer(DEFAULT_REQUEST_INTERVAL_IN_MILLIS);
   }
 
   @Override public boolean isExecuting() {
