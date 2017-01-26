@@ -1,9 +1,18 @@
 package com.zireck.requestcache.library;
 
-import com.zireck.requestcache.library.executor.RequestsExecutor;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.util.Log;
+import com.google.gson.Gson;
+import com.zireck.requestcache.library.cache.RequestQueue;
+import com.zireck.requestcache.library.cache.SharedPreferencesQueue;
+import com.zireck.requestcache.library.executor.PendingRequestsExecutor;
+import com.zireck.requestcache.library.executor.RequestExecutor;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.network.ApiService;
 import com.zireck.requestcache.library.network.ApiServiceBuilder;
+import java.util.List;
 
 public class RequestCacheManager implements RequestCache {
 
@@ -11,46 +20,52 @@ public class RequestCacheManager implements RequestCache {
 
   private static RequestCacheManager INSTANCE = null;
 
+  private final SharedPreferences sharedPreferences;
+  private final Gson gson;
+  private final RequestQueue requestQueue;
   private final ApiServiceBuilder apiServiceBuilder;
   private final ApiService apiService;
-  private final RequestsExecutor requestsExecutor;
+  private final RequestExecutor requestExecutor;
 
-  public static RequestCacheManager getInstance() {
+  public static RequestCacheManager getInstance(Context context) {
     if (INSTANCE == null) {
-      INSTANCE = new RequestCacheManager();
+      INSTANCE = new RequestCacheManager(context);
     }
 
     return INSTANCE;
   }
 
-  private RequestCacheManager() {
+  private RequestCacheManager(Context context) {
+    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+    gson = new Gson();
+    requestQueue = new SharedPreferencesQueue(sharedPreferences, gson);
     apiServiceBuilder = new ApiServiceBuilder();
     apiService = apiServiceBuilder.build();
-    requestsExecutor = new RequestsExecutor(apiService);
+    requestExecutor = new PendingRequestsExecutor(apiService);
   }
 
   @Override public void setRequestIntervalTime(long intervalTimeInMillis) {
-    requestsExecutor.setIntervalTime(intervalTimeInMillis);
+    requestExecutor.setIntervalTime(intervalTimeInMillis);
   }
 
   @Override public void enqueueRequest(RequestModel requestModel) {
-
+    requestQueue.add(requestModel);
   }
 
-  @Override public void enqueueRequests() {
-    // TODO Add request to persisted queue
+  @Override public void enqueueRequests(List<RequestModel> requestModels) {
+    requestQueue.add(requestModels);
   }
 
   @Override public boolean sendPendingRequests() {
-    if (requestsExecutor.isExecuting()) {
+    if (requestExecutor.isExecuting()) {
+      Log.e(TAG, "RequestExecutor is already in progress. Try later.");
       return false;
     }
 
-    // TODO requestsExecutor.execute(persistedQueue);
-    return true;
+    return requestExecutor.execute(requestQueue);
   }
 
   @Override public void clearRequestsCache() {
-    // TODO clear persisted queue
+    requestQueue.clear();
   }
 }

@@ -2,41 +2,37 @@ package com.zireck.requestcache.library.executor;
 
 import android.os.CountDownTimer;
 import android.util.Log;
+import com.zireck.requestcache.library.cache.RequestQueue;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.network.ApiService;
 import com.zireck.requestcache.library.util.MethodType;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class RequestsExecutor {
+public class PendingRequestsExecutor implements RequestExecutor {
 
-  private static final String TAG = RequestsExecutor.class.getSimpleName();
+  private static final String TAG = PendingRequestsExecutor.class.getSimpleName();
   private static final int REQUEST_INTERVAL_IN_MILLIS = 5000;
 
   private Callback<ResponseBody> retrofitCallback;
   private CountDownTimer executorTimer;
   private ApiService apiService;
   private boolean isExecuting = false;
-  private List<RequestModel> requestModels;
-  private Iterator<RequestModel> requestModelIterator;
+  private RequestQueue requestQueue;
 
-  public RequestsExecutor(ApiService apiService) {
+  public PendingRequestsExecutor(ApiService apiService) {
     this.apiService = apiService;
     setupRetrofitCallback();
     setupTimer(REQUEST_INTERVAL_IN_MILLIS);
   }
 
-  public boolean isExecuting() {
+  @Override public boolean isExecuting() {
     return isExecuting;
   }
 
-  public void setIntervalTime(long intervalTimeInMillis) {
+  @Override public void setIntervalTime(long intervalTimeInMillis) {
     if (intervalTimeInMillis < 0) {
       throw new IllegalArgumentException("Interval time must be a positive number");
     }
@@ -44,31 +40,20 @@ public class RequestsExecutor {
     setupTimer(intervalTimeInMillis);
   }
 
-  public void execute(RequestModel requestModel) {
-    if (requestModel == null) {
+  @Override public boolean execute(RequestQueue requestQueue) {
+    if (requestQueue == null) {
       Log.e(TAG, "Invalid request list given");
-      return;
+      return false;
     }
 
-    requestModels = Collections.synchronizedList(new ArrayList<RequestModel>());
-    requestModels.add(requestModel);
-    requestModelIterator = requestModels.iterator();
+    this.requestQueue = requestQueue;
+    this.requestQueue.load();
     executeNextPendingRequest();
-  }
-
-  public void execute(List<RequestModel> requestModels) {
-    if (requestModels == null) {
-      Log.e(TAG, "Invalid request list given");
-      return;
-    }
-
-    this.requestModels = Collections.synchronizedList(requestModels);
-    requestModelIterator = this.requestModels.iterator();
-    executeNextPendingRequest();
+    return true;
   }
 
   private void executeNextPendingRequest() {
-    if (!requestModelIterator.hasNext()) {
+    if (requestQueue.isEmpty() || !requestQueue.hasNext()) {
       isExecuting = false;
       Log.d(TAG, "No pending requests left.");
       return;
@@ -76,7 +61,7 @@ public class RequestsExecutor {
 
     isExecuting = true;
 
-    RequestModel requestModel = requestModelIterator.next();
+    RequestModel requestModel = requestQueue.next();
     Call<ResponseBody> retrofitCall = getRetrofitCallFor(requestModel);
     if (retrofitCall == null) {
       Log.e(TAG, "Invalid Retrofit call");
@@ -107,7 +92,8 @@ public class RequestsExecutor {
   private void setupRetrofitCallback() {
     retrofitCallback = new Callback<ResponseBody>() {
       @Override public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-        requestModelIterator.remove();
+        requestQueue.remove();
+        requestQueue.persist();
         executorTimer.start();
       }
 
