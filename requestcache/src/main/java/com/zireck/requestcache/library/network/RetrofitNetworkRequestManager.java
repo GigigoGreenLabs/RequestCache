@@ -61,6 +61,11 @@ public class RetrofitNetworkRequestManager implements NetworkRequestManager {
   }
 
   private Call<ResponseBody> getRetrofitCallFor(RequestModel requestModel) {
+    if (requestModel == null) {
+      Log.e(TAG, "Invalid request model");
+      return null;
+    }
+
     final String requestUrl = requestModel.getBaseUrl() + requestModel.getEndpoint();
     Call<ResponseBody> retrofitCall = null;
 
