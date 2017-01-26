@@ -77,13 +77,21 @@ public class PendingRequestsExecutor implements RequestExecutor {
     Call<ResponseBody> retrofitCall = null;
 
     if (requestModel.getMethodType() == MethodType.GET) {
-      if (requestModel.getQuery() != null) {
-        retrofitCall = apiService.requestGet(requestUrl);
-      } else {
-        retrofitCall = apiService.requestGet(requestUrl, requestModel.getQuery());
-      }
+      retrofitCall = handleGetRequest(requestModel, requestUrl);
+    } else if (requestModel.getMethodType() == MethodType.POST) {
+      retrofitCall = handlePostRequest(requestModel, requestUrl);
+    }
+
+    return retrofitCall;
+  }
+
+  private Call<ResponseBody> handleGetRequest(RequestModel requestModel, String requestUrl) {
+    Call<ResponseBody> retrofitCall = null;
+
+    if (requestModel.getQuery() != null) {
+      retrofitCall = apiService.requestGet(requestUrl);
     } else {
-      // TODO
+      retrofitCall = apiService.requestGet(requestUrl, requestModel.getQuery());
     }
 
     return retrofitCall;
@@ -101,6 +109,23 @@ public class PendingRequestsExecutor implements RequestExecutor {
         executorTimer.start();
       }
     };
+  }
+
+  private Call<ResponseBody> handlePostRequest(RequestModel requestModel, String requestUrl) {
+    Call<ResponseBody> retrofitCall = null;
+
+    if (requestModel.getQuery() == null && requestModel.getBody() == null) {
+      retrofitCall = apiService.requestPost(requestUrl);
+    } else if (requestModel.getQuery() != null && requestModel.getBody() == null) {
+      retrofitCall = apiService.requestPost(requestUrl, requestModel.getQuery());
+    } else if (requestModel.getQuery() == null && requestModel.getBody() != null) {
+      retrofitCall = apiService.requestPost(requestUrl, requestModel.getBody());
+    } else if (requestModel.getQuery() != null && requestModel.getBody() != null) {
+      retrofitCall =
+          apiService.requestPost(requestUrl, requestModel.getQuery(), requestModel.getBody());
+    }
+
+    return retrofitCall;
   }
 
   private void setupTimer(long intervalTimeInMillis) {

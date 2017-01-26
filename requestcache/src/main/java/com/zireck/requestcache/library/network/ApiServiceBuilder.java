@@ -1,6 +1,7 @@
 package com.zireck.requestcache.library.network;
 
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiServiceBuilder {
 
@@ -22,6 +23,8 @@ public class ApiServiceBuilder {
     if (baseUrl != null && baseUrl.length() > 0) {
       retrofitBuilder.baseUrl(baseUrl);
     }
+
+    retrofitBuilder.addConverterFactory(GsonConverterFactory.create());
 
     Retrofit retrofit = retrofitBuilder.build();
     return retrofit.create(BASE_API_SERVICE_CLASS);
