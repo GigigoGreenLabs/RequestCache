@@ -12,6 +12,8 @@ import com.zireck.requestcache.library.executor.RequestExecutor;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.network.ApiService;
 import com.zireck.requestcache.library.network.ApiServiceBuilder;
+import com.zireck.requestcache.library.network.NetworkRequestManager;
+import com.zireck.requestcache.library.network.RetrofitNetworkRequestManager;
 import java.util.List;
 
 public class RequestCacheManager implements RequestCache {
@@ -25,6 +27,7 @@ public class RequestCacheManager implements RequestCache {
   private final RequestQueue requestQueue;
   private final ApiServiceBuilder apiServiceBuilder;
   private final ApiService apiService;
+  private final NetworkRequestManager networkRequestManager;
   private final RequestExecutor requestExecutor;
 
   public static RequestCacheManager getInstance(Context context) {
@@ -41,7 +44,8 @@ public class RequestCacheManager implements RequestCache {
     requestQueue = new SharedPreferencesQueue(sharedPreferences, gson);
     apiServiceBuilder = new ApiServiceBuilder();
     apiService = apiServiceBuilder.build();
-    requestExecutor = new PendingRequestsExecutor(apiService);
+    networkRequestManager = new RetrofitNetworkRequestManager(apiService);
+    requestExecutor = new PendingRequestsExecutor(networkRequestManager);
   }
 
   @Override public void setRequestIntervalTime(long intervalTimeInMillis) {
