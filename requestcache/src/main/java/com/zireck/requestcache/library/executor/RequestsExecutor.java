@@ -5,6 +5,8 @@ import android.util.Log;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.network.ApiService;
 import com.zireck.requestcache.library.util.MethodType;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import okhttp3.ResponseBody;
@@ -17,6 +19,8 @@ public class RequestsExecutor {
   private static final String TAG = RequestsExecutor.class.getSimpleName();
   private static final int REQUEST_INTERVAL_IN_MILLIS = 5000;
 
+  private Callback<ResponseBody> retrofitCallback;
+  private CountDownTimer executorTimer;
   private ApiService apiService;
   private boolean isExecuting = false;
   private List<RequestModel> requestModels;
@@ -24,10 +28,32 @@ public class RequestsExecutor {
 
   public RequestsExecutor(ApiService apiService) {
     this.apiService = apiService;
+    setupRetrofitCallback();
+    setupTimer(REQUEST_INTERVAL_IN_MILLIS);
   }
 
   public boolean isExecuting() {
     return isExecuting;
+  }
+
+  public void setIntervalTime(long intervalTimeInMillis) {
+    if (intervalTimeInMillis < 0) {
+      throw new IllegalArgumentException("Interval time must be a positive number");
+    }
+
+    setupTimer(intervalTimeInMillis);
+  }
+
+  public void execute(RequestModel requestModel) {
+    if (requestModel == null) {
+      Log.e(TAG, "Invalid request list given");
+      return;
+    }
+
+    requestModels = Collections.synchronizedList(new ArrayList<RequestModel>());
+    requestModels.add(requestModel);
+    requestModelIterator = requestModels.iterator();
+    executeNextPendingRequest();
   }
 
   public void execute(List<RequestModel> requestModels) {
@@ -36,7 +62,8 @@ public class RequestsExecutor {
       return;
     }
 
-    requestModelIterator = requestModels.iterator();
+    this.requestModels = Collections.synchronizedList(requestModels);
+    requestModelIterator = this.requestModels.iterator();
     executeNextPendingRequest();
   }
 
@@ -77,25 +104,32 @@ public class RequestsExecutor {
     return retrofitCall;
   }
 
-  private final CountDownTimer executorTimer =
-      new CountDownTimer(REQUEST_INTERVAL_IN_MILLIS, 1000) {
-        @Override public void onTick(long millisUntilFinished) {
-          // no-op
-        }
+  private void setupRetrofitCallback() {
+    retrofitCallback = new Callback<ResponseBody>() {
+      @Override public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+        requestModelIterator.remove();
+        executorTimer.start();
+      }
 
-        @Override public void onFinish() {
-          executeNextPendingRequest();
-        }
-      };
+      @Override public void onFailure(Call<ResponseBody> call, Throwable t) {
+        executorTimer.start();
+      }
+    };
+  }
 
-  Callback<ResponseBody> retrofitCallback = new Callback<ResponseBody>() {
-    @Override public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-      requestModelIterator.remove();
-      executorTimer.start();
+  private void setupTimer(long intervalTimeInMillis) {
+    if (executorTimer != null) {
+      executorTimer.cancel();
     }
 
-    @Override public void onFailure(Call<ResponseBody> call, Throwable t) {
-      executorTimer.start();
-    }
-  };
+    executorTimer = new CountDownTimer(intervalTimeInMillis, 1000) {
+      @Override public void onTick(long millisUntilFinished) {
+        // no-op
+      }
+
+      @Override public void onFinish() {
+        executeNextPendingRequest();
+      }
+    };
+  }
 }

@@ -1,6 +1,7 @@
 package com.zireck.requestcache.library;
 
 import com.zireck.requestcache.library.executor.RequestsExecutor;
+import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.network.ApiService;
 import com.zireck.requestcache.library.network.ApiServiceBuilder;
 
@@ -28,15 +29,28 @@ public class RequestCacheManager implements RequestCache {
     requestsExecutor = new RequestsExecutor(apiService);
   }
 
-  @Override public void enqueueRequests() {
+  @Override public void setRequestIntervalTime(long intervalTimeInMillis) {
+    requestsExecutor.setIntervalTime(intervalTimeInMillis);
+  }
+
+  @Override public void enqueueRequest(RequestModel requestModel) {
 
   }
 
-  @Override public void sendPendingRequests() {
+  @Override public void enqueueRequests() {
+    // TODO Add request to persisted queue
+  }
 
+  @Override public boolean sendPendingRequests() {
+    if (requestsExecutor.isExecuting()) {
+      return false;
+    }
+
+    // TODO requestsExecutor.execute(persistedQueue);
+    return true;
   }
 
   @Override public void clearRequestsCache() {
-
+    // TODO clear persisted queue
   }
 }
