@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'jacoco-android'
 
 android {
   compileSdkVersion 25
@@ -23,6 +24,15 @@ android {
   }
   testOptions {
     unitTests.returnDefaultValues = true
+  }
+}
+
+buildscript {
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath 'com.dicedmelon.gradle:jacoco-android:0.1.1'
   }
 }
 
