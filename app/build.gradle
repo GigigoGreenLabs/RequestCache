@@ -30,4 +30,6 @@ dependencies {
   compile 'com.android.support:appcompat-v7:25.1.0'
   compile project(':requestcache')
   testCompile 'junit:junit:4.12'
+  testCompile 'org.robolectric:robolectric:3.2.2'
+  testCompile 'org.khronos:opengl-api:gl1.1-android-2.1_r1'
 }
