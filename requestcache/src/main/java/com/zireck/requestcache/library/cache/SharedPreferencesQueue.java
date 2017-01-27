@@ -42,13 +42,12 @@ public class SharedPreferencesQueue implements RequestQueue {
   @Override public void load() {
     String pendingRequestQueueString = sharedPreferences.getString(KEY_PENDING_REQUEST_QUEUE, "");
     if (pendingRequestQueueString.length() <= 0) {
-      pendingRequestQueue = new ArrayList<>();
+      pendingRequestQueue = Collections.synchronizedList(new ArrayList<RequestModel>());
     } else {
       Type pendingRequestQueueType = new TypeToken<List<RequestModel>>() {}.getType();
-      pendingRequestQueue = gson.fromJson(pendingRequestQueueString, pendingRequestQueueType);
+      pendingRequestQueue = Collections.synchronizedList(
+          (List<RequestModel>) gson.fromJson(pendingRequestQueueString, pendingRequestQueueType));
     }
-
-    pendingRequestQueueIterator = pendingRequestQueue.iterator();
   }
 
   @Override public boolean persist() {
