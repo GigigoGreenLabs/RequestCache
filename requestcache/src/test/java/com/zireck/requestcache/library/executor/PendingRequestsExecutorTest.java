@@ -21,7 +21,6 @@ import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class) public class PendingRequestsExecutorTest {
@@ -52,7 +51,6 @@ import static org.mockito.Mockito.when;
 
     boolean executeResult = pendingRequestsExecutor.execute(nullRequestQueue);
 
-    verifyZeroInteractions(nullRequestQueue);
     assertThat(executeResult, is(false));
   }
 
@@ -95,6 +93,10 @@ import static org.mockito.Mockito.when;
 
     pendingRequestsExecutor.execute(mockRequestQueue);
 
+    verify(mockRequestQueue).load();
+    verify(mockRequestQueue).isEmpty();
+    verify(mockRequestQueue).hasNext();
+    verify(mockRequestQueue).next();
     verify(mockNetworkRequestManager).sendRequest(any(RequestModel.class),
         networkResponseCallbackArgumentCaptor.capture());
     networkResponseCallbackArgumentCaptor.getValue().onSuccess();
