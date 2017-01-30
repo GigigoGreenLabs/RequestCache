@@ -1,20 +1,22 @@
-package com.zireck.requestcache;
+package com.zireck.requestcache.activity;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+import com.zireck.requestcache.R;
+import com.zireck.requestcache.RequestCacheApplication;
 import com.zireck.requestcache.library.RequestCache;
-import com.zireck.requestcache.library.RequestCacheManager;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.util.MethodType;
 import java.util.ArrayList;
 import java.util.List;
+import javax.inject.Inject;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-  private RequestCache requestCache;
+  @Inject RequestCache requestCache;
   private Button enqueueView;
   private Button sendView;
   private Button clearView;
@@ -23,8 +25,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
-    requestCache = RequestCacheManager.getInstance(this);
+    ((RequestCacheApplication) getApplication()).getComponent().inject(this);
 
+    initUi();
+  }
+
+  private void initUi() {
     enqueueView = (Button) findViewById(R.id.enqueue);
     sendView = (Button) findViewById(R.id.send);
     clearView = (Button) findViewById(R.id.clear);

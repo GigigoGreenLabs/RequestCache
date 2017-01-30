@@ -2,6 +2,7 @@ package com.zireck.requestcache;
 
 import android.widget.Button;
 import android.widget.Toast;
+import com.zireck.requestcache.activity.MainActivity;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
