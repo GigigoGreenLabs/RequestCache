@@ -2,7 +2,7 @@ package com.zireck.requestcache;
 
 import com.zireck.requestcache.di.ApplicationModule;
 
-public class TestApplication extends RequestCacheApplication {
+public class RobolectricTestApp extends RequestCacheApplication {
 
   private ApplicationModule applicationModule;
 

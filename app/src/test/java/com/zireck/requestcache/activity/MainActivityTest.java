@@ -4,7 +4,7 @@ import android.widget.Button;
 import android.widget.Toast;
 import com.zireck.requestcache.BuildConfig;
 import com.zireck.requestcache.R;
-import com.zireck.requestcache.TestApplication;
+import com.zireck.requestcache.RobolectricTestApp;
 import com.zireck.requestcache.di.MockApplicationModule;
 import com.zireck.requestcache.library.RequestCache;
 import java.util.List;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, application = TestApplication.class)
+@Config(constants = BuildConfig.class, application = RobolectricTestApp.class)
 public class MainActivityTest {
 
   private Button enqueueView;
@@ -40,10 +40,10 @@ public class MainActivityTest {
   @Before public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
 
-    TestApplication testApplication = (TestApplication) RuntimeEnvironment.application;
+    RobolectricTestApp robolectricTestApp = (RobolectricTestApp) RuntimeEnvironment.application;
     MockApplicationModule mockApplicationModule =
-        new MockApplicationModule(testApplication, mockRequestCache);
-    testApplication.setApplicationModule(mockApplicationModule);
+        new MockApplicationModule(robolectricTestApp, mockRequestCache);
+    robolectricTestApp.setApplicationModule(mockApplicationModule);
 
     MainActivity mainActivity = Robolectric.setupActivity(MainActivity.class);
 
