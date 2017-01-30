@@ -41,7 +41,7 @@ public class PendingRequestsExecutor implements RequestExecutor {
     }
 
     this.requestQueue = requestQueue;
-    this.requestQueue.load();
+    this.requestQueue.loadToMemory();
     executeNextPendingRequest();
     return true;
   }
@@ -69,7 +69,7 @@ public class PendingRequestsExecutor implements RequestExecutor {
 
   private void handleSuccessfulResponse() {
     requestQueue.remove();
-    requestQueue.persist();
+    requestQueue.persistToDisk();
     executorTimer.start();
   }
 

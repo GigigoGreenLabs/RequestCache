@@ -54,12 +54,12 @@ public class RequestCacheManager implements RequestCache {
 
   @Override public void enqueueRequest(RequestModel requestModel) {
     requestQueue.add(requestModel);
-    requestQueue.persist();
+    requestQueue.persistToDisk();
   }
 
   @Override public void enqueueRequests(List<RequestModel> requestModels) {
     requestQueue.add(requestModels);
-    requestQueue.persist();
+    requestQueue.persistToDisk();
   }
 
   @Override public boolean sendPendingRequests() {

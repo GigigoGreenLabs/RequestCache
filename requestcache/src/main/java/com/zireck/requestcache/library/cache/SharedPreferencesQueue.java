@@ -39,7 +39,7 @@ public class SharedPreferencesQueue implements RequestQueue {
     pendingRequestQueue.addAll(requestModels);
   }
 
-  @Override public void load() {
+  @Override public void loadToMemory() {
     String pendingRequestQueueString = sharedPreferences.getString(KEY_PENDING_REQUEST_QUEUE, "");
     if (pendingRequestQueueString.length() <= 0) {
       pendingRequestQueue = Collections.synchronizedList(new ArrayList<RequestModel>());
@@ -50,7 +50,7 @@ public class SharedPreferencesQueue implements RequestQueue {
     }
   }
 
-  @Override public boolean persist() {
+  @Override public boolean persistToDisk() {
     String pendingRequestQueueString = gson.toJson(pendingRequestQueue);
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putString(KEY_PENDING_REQUEST_QUEUE, pendingRequestQueueString);

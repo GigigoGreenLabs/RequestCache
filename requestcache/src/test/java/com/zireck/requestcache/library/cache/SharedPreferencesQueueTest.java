@@ -38,7 +38,7 @@ import static org.mockito.Mockito.when;
   @Test public void shouldNotHaveNextItemWhenQueueIsEmpty() throws Exception {
     when(mockSharedPreferences.getString("PENDING_REQUEST_QUEUE", "")).thenReturn("");
 
-    sharedPreferencesQueue.load();
+    sharedPreferencesQueue.loadToMemory();
 
     verify(mockSharedPreferences).getString("PENDING_REQUEST_QUEUE", "");
     assertThat(sharedPreferencesQueue.isEmpty(), is(true));
@@ -53,7 +53,7 @@ import static org.mockito.Mockito.when;
     when(mockSharedPreferences.getString("PENDING_REQUEST_QUEUE", "")).thenReturn(
         pendingRequestQueueString);
 
-    sharedPreferencesQueue.load();
+    sharedPreferencesQueue.loadToMemory();
 
     assertThat(sharedPreferencesQueue.hasNext(), is(true));
     RequestModel actualRequestModel = sharedPreferencesQueue.next();
@@ -85,7 +85,7 @@ import static org.mockito.Mockito.when;
     requestModels.add(getSomeRequestModel());
     sharedPreferencesQueue.add(requestModels);
     sharedPreferencesQueue.add(getSomeRequestModel());
-    boolean persistResult = sharedPreferencesQueue.persist();
+    boolean persistResult = sharedPreferencesQueue.persistToDisk();
 
     verify(mockSharedPreferences).edit();
     requestModels.add(getSomeRequestModel());
