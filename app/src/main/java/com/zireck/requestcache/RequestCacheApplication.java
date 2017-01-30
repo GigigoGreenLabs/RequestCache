@@ -14,13 +14,17 @@ public class RequestCacheApplication extends Application {
     initComponent();
   }
 
-  private void initComponent() {
-    applicationComponent = DaggerApplicationComponent.builder()
-        .applicationModule(new ApplicationModule(this))
-        .build();
-  }
-
   public ApplicationComponent getComponent() {
     return applicationComponent;
+  }
+
+  ApplicationModule getApplicationModule() {
+    return new ApplicationModule(this);
+  }
+
+  void initComponent() {
+    applicationComponent = DaggerApplicationComponent.builder()
+        .applicationModule(getApplicationModule())
+        .build();
   }
 }
