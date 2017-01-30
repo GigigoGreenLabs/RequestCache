@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import com.google.gson.Gson;
 import com.zireck.requestcache.library.cache.RequestQueue;
 import com.zireck.requestcache.library.cache.SharedPreferencesQueue;
 import com.zireck.requestcache.library.executor.PendingRequestsExecutor;
@@ -14,6 +13,8 @@ import com.zireck.requestcache.library.network.ApiService;
 import com.zireck.requestcache.library.network.ApiServiceBuilder;
 import com.zireck.requestcache.library.network.NetworkRequestManager;
 import com.zireck.requestcache.library.network.RetrofitNetworkRequestManager;
+import com.zireck.requestcache.library.util.GsonSerializer;
+import com.zireck.requestcache.library.util.JsonSerializer;
 import java.util.List;
 
 public class RequestCacheManager implements RequestCache {
@@ -23,7 +24,7 @@ public class RequestCacheManager implements RequestCache {
   private static RequestCacheManager INSTANCE = null;
 
   private final SharedPreferences sharedPreferences;
-  private final Gson gson;
+  private final JsonSerializer jsonSerializer;
   private final RequestQueue requestQueue;
   private final ApiServiceBuilder apiServiceBuilder;
   private final ApiService apiService;
@@ -40,8 +41,8 @@ public class RequestCacheManager implements RequestCache {
 
   private RequestCacheManager(Context context) {
     sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-    gson = new Gson();
-    requestQueue = new SharedPreferencesQueue(sharedPreferences, gson);
+    jsonSerializer = new GsonSerializer();
+    requestQueue = new SharedPreferencesQueue(sharedPreferences, jsonSerializer);
     apiServiceBuilder = new ApiServiceBuilder();
     apiService = apiServiceBuilder.build();
     networkRequestManager = new RetrofitNetworkRequestManager(apiService);

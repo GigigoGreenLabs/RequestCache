@@ -2,9 +2,9 @@ package com.zireck.requestcache.library.cache;
 
 import android.content.SharedPreferences;
 import android.util.Log;
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.zireck.requestcache.library.model.RequestModel;
+import com.zireck.requestcache.library.util.JsonSerializer;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,14 +17,15 @@ public class SharedPreferencesQueue implements RequestQueue {
   private static final String KEY_PENDING_REQUEST_QUEUE = "PENDING_REQUEST_QUEUE";
 
   private final SharedPreferences sharedPreferences;
-  private final Gson gson;
+  private final JsonSerializer jsonSerializer;
   private List<RequestModel> pendingRequestQueue =
       Collections.synchronizedList(new ArrayList<RequestModel>());
   private Iterator<RequestModel> pendingRequestQueueIterator;
 
-  public SharedPreferencesQueue(SharedPreferences sharedPreferences, Gson gson) {
+  public SharedPreferencesQueue(SharedPreferences sharedPreferences,
+      JsonSerializer jsonSerializer) {
     this.sharedPreferences = sharedPreferences;
-    this.gson = gson;
+    this.jsonSerializer = jsonSerializer;
   }
 
   @Override public boolean isEmpty() {
@@ -46,12 +47,13 @@ public class SharedPreferencesQueue implements RequestQueue {
     } else {
       Type pendingRequestQueueType = new TypeToken<List<RequestModel>>() {}.getType();
       pendingRequestQueue = Collections.synchronizedList(
-          (List<RequestModel>) gson.fromJson(pendingRequestQueueString, pendingRequestQueueType));
+          (List<RequestModel>) jsonSerializer.fromJson(pendingRequestQueueString,
+              pendingRequestQueueType));
     }
   }
 
   @Override public boolean persistToDisk() {
-    String pendingRequestQueueString = gson.toJson(pendingRequestQueue);
+    String pendingRequestQueueString = jsonSerializer.toJson(pendingRequestQueue);
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putString(KEY_PENDING_REQUEST_QUEUE, pendingRequestQueueString);
 

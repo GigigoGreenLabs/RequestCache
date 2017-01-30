@@ -3,6 +3,8 @@ package com.zireck.requestcache.library.cache;
 import android.content.SharedPreferences;
 import com.google.gson.Gson;
 import com.zireck.requestcache.library.model.RequestModel;
+import com.zireck.requestcache.library.util.GsonSerializer;
+import com.zireck.requestcache.library.util.JsonSerializer;
 import com.zireck.requestcache.library.util.MethodType;
 import java.util.ArrayList;
 import org.junit.Before;
@@ -27,12 +29,12 @@ import static org.mockito.Mockito.when;
   private SharedPreferencesQueue sharedPreferencesQueue;
 
   @Mock private SharedPreferences mockSharedPreferences;
-  private Gson gson; // TODO mock this
+  private JsonSerializer jsonSerializer;
 
   @Before public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-    gson = new Gson();
-    sharedPreferencesQueue = new SharedPreferencesQueue(mockSharedPreferences, gson);
+    jsonSerializer = new GsonSerializer();
+    sharedPreferencesQueue = new SharedPreferencesQueue(mockSharedPreferences, jsonSerializer);
   }
 
   @Test public void shouldNotHaveNextItemWhenQueueIsEmpty() throws Exception {
@@ -49,7 +51,7 @@ import static org.mockito.Mockito.when;
   @Test public void shouldHaveNextItemWhenQueueIsNotEmpty() throws Exception {
     ArrayList<RequestModel> requestModels = new ArrayList<>();
     requestModels.add(getSomeRequestModel());
-    String pendingRequestQueueString = gson.toJson(requestModels);
+    String pendingRequestQueueString = jsonSerializer.toJson(requestModels);
     when(mockSharedPreferences.getString("PENDING_REQUEST_QUEUE", "")).thenReturn(
         pendingRequestQueueString);
 
@@ -89,7 +91,7 @@ import static org.mockito.Mockito.when;
 
     verify(mockSharedPreferences).edit();
     requestModels.add(getSomeRequestModel());
-    String requestModelListString = gson.toJson(requestModels);
+    String requestModelListString = jsonSerializer.toJson(requestModels);
     verify(mockSharedPreferencesEditor).putString("PENDING_REQUEST_QUEUE", requestModelListString);
     verify(mockSharedPreferencesEditor).commit();
     verifyNoMoreInteractions(mockSharedPreferences, mockSharedPreferencesEditor);
