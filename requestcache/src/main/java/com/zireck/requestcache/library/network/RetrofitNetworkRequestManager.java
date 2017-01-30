@@ -3,6 +3,8 @@ package com.zireck.requestcache.library.network;
 import android.util.Log;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.util.MethodType;
+import java.util.HashMap;
+import java.util.Map;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -25,7 +27,7 @@ public class RetrofitNetworkRequestManager implements NetworkRequestManager {
       NetworkResponseCallback networkResponseCallback) {
     this.networkResponseCallback = networkResponseCallback;
 
-    Call<ResponseBody> retrofitCall = getRetrofitCallFor(requestModel);
+    Call<ResponseBody> retrofitCall = composeRequestFor(requestModel);
 
     if (retrofitCall == null) {
       Log.e(TAG, "Invalid Retrofit call");
@@ -40,6 +42,7 @@ public class RetrofitNetworkRequestManager implements NetworkRequestManager {
     retrofitCallback = new Callback<ResponseBody>() {
       @Override public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
         if (networkResponseCallback == null) {
+          Log.e(TAG, "Cannot deliver Retrofit request response");
           return;
         }
 
@@ -52,6 +55,7 @@ public class RetrofitNetworkRequestManager implements NetworkRequestManager {
 
       @Override public void onFailure(Call<ResponseBody> call, Throwable t) {
         if (networkResponseCallback == null) {
+          Log.e(TAG, "Cannot deliver Retrofit request response");
           return;
         }
 
@@ -60,50 +64,23 @@ public class RetrofitNetworkRequestManager implements NetworkRequestManager {
     };
   }
 
-  private Call<ResponseBody> getRetrofitCallFor(RequestModel requestModel) {
+  private Call<ResponseBody> composeRequestFor(RequestModel requestModel) {
     if (requestModel == null) {
       Log.e(TAG, "Invalid request model");
       return null;
     }
 
-    final String requestUrl = requestModel.getBaseUrl() + requestModel.getEndpoint();
-    Call<ResponseBody> retrofitCall = null;
+    Call<ResponseBody> request = null;
+    Map headers = requestModel.getHeaders() == null ? new HashMap<>() : requestModel.getHeaders();
+    String requestUrl = requestModel.getBaseUrl() + requestModel.getEndpoint();
+    Map query = requestModel.getQuery() == null ? new HashMap<>() : requestModel.getQuery();
 
     if (requestModel.getMethodType() == MethodType.GET) {
-      retrofitCall = handleGetRequest(requestModel, requestUrl);
+      request = apiService.requestGet(headers, requestUrl, query);
     } else if (requestModel.getMethodType() == MethodType.POST) {
-      retrofitCall = handlePostRequest(requestModel, requestUrl);
+      request = apiService.requestPost(headers, requestUrl, requestModel.getBody(), query);
     }
 
-    return retrofitCall;
-  }
-
-  private Call<ResponseBody> handleGetRequest(RequestModel requestModel, String requestUrl) {
-    Call<ResponseBody> retrofitCall = null;
-
-    if (requestModel.getQuery() != null) {
-      retrofitCall = apiService.requestGet(requestUrl);
-    } else {
-      retrofitCall = apiService.requestGet(requestUrl, requestModel.getQuery());
-    }
-
-    return retrofitCall;
-  }
-
-  private Call<ResponseBody> handlePostRequest(RequestModel requestModel, String requestUrl) {
-    Call<ResponseBody> retrofitCall = null;
-
-    if (requestModel.getQuery() == null && requestModel.getBody() == null) {
-      retrofitCall = apiService.requestPost(requestUrl);
-    } else if (requestModel.getQuery() != null && requestModel.getBody() == null) {
-      retrofitCall = apiService.requestPost(requestUrl, requestModel.getQuery());
-    } else if (requestModel.getQuery() == null && requestModel.getBody() != null) {
-      retrofitCall = apiService.requestPost(requestUrl, requestModel.getBody());
-    } else if (requestModel.getQuery() != null && requestModel.getBody() != null) {
-      retrofitCall =
-          apiService.requestPost(requestUrl, requestModel.getQuery(), requestModel.getBody());
-    }
-
-    return retrofitCall;
+    return request;
   }
 }

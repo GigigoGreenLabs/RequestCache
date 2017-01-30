@@ -91,6 +91,10 @@ public class RequestModel<T> {
       } else if (requestModel.endpoint == null || requestModel.endpoint.length() <= 0) {
         throw new IllegalStateException("Endpoint must be defined.");
       }
+
+      if (requestModel.methodType == MethodType.POST && requestModel.body == null) {
+        throw new IllegalStateException("Method POST must have a request body.");
+      }
     }
   }
 }
