@@ -25,6 +25,10 @@ public class RequestModel<T> {
     return headers;
   }
 
+  public String getUrl() {
+    return baseUrl + endpoint;
+  }
+
   public String getBaseUrl() {
     return baseUrl;
   }

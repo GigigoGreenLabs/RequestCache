@@ -72,13 +72,13 @@ public class RetrofitNetworkRequestManager implements NetworkRequestManager {
 
     Call<ResponseBody> request = null;
     Map headers = requestModel.getHeaders() == null ? new HashMap<>() : requestModel.getHeaders();
-    String requestUrl = requestModel.getBaseUrl() + requestModel.getEndpoint();
     Map query = requestModel.getQuery() == null ? new HashMap<>() : requestModel.getQuery();
 
     if (requestModel.getMethodType() == MethodType.GET) {
-      request = apiService.requestGet(headers, requestUrl, query);
+      request = apiService.requestGet(headers, requestModel.getUrl(), query);
     } else if (requestModel.getMethodType() == MethodType.POST) {
-      request = apiService.requestPost(headers, requestUrl, requestModel.getBody(), query);
+      request =
+          apiService.requestPost(headers, requestModel.getUrl(), requestModel.getBody(), query);
     }
 
     return request;

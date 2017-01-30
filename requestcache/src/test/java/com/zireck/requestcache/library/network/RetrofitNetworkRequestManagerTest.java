@@ -2,6 +2,7 @@ package com.zireck.requestcache.library.network;
 
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.util.MethodType;
+import java.util.Map;
 import okhttp3.HttpUrl;
 import okhttp3.ResponseBody;
 import okhttp3.mockwebserver.MockResponse;
@@ -63,7 +64,8 @@ import static org.mockito.Mockito.when;
     RequestModel validRequest = getValidRequest();
 
     Call<ResponseBody> call =
-        apiService.requestGet(validRequest.getBaseUrl() + validRequest.getEndpoint());
+        apiService.requestGet(validRequest.getHeaders(), validRequest.getUrl(),
+            validRequest.getQuery());
 
     assertThat(call, notNullValue());
     assertThat(call, instanceOf(Call.class));
@@ -73,9 +75,10 @@ import static org.mockito.Mockito.when;
     MockResponse successfulMockResponse = getSuccessfulMockResponse();
     mockWebServer.enqueue(successfulMockResponse);
     RequestModel validRequest = getValidRequest();
+    String requestUrl = mockWebServer.url("/") + validRequest.getEndpoint();
 
     Call<ResponseBody> call =
-        apiService.requestGet(mockWebServer.url("/") + validRequest.getEndpoint());
+        apiService.requestGet(validRequest.getHeaders(), requestUrl, validRequest.getQuery());
     Response<ResponseBody> response = call.execute();
 
     assertThat(response, notNullValue());
@@ -87,9 +90,10 @@ import static org.mockito.Mockito.when;
     MockResponse unsuccessfulResponse = getUnsuccessfulResponse();
     mockWebServer.enqueue(unsuccessfulResponse);
     RequestModel validRequest = getValidRequest();
+    String requestUrl = mockWebServer.url("/") + validRequest.getEndpoint();
 
     Call<ResponseBody> call =
-        apiService.requestGet(mockWebServer.url("/") + validRequest.getEndpoint());
+        apiService.requestGet(validRequest.getHeaders(), requestUrl, validRequest.getQuery());
     Response<ResponseBody> response = call.execute();
 
     assertThat(response, notNullValue());
@@ -100,8 +104,8 @@ import static org.mockito.Mockito.when;
   @Test public void shouldEnqueueRequestWhenValidRequestReceived() throws Exception {
     RequestModel validRequest = getValidRequest();
     Call<ResponseBody> mockRetrofitCallback = mock(Call.class);
-    when(mockApiService.requestGet(
-        validRequest.getBaseUrl() + validRequest.getEndpoint())).thenReturn(mockRetrofitCallback);
+    when(mockApiService.requestGet(validRequest.getHeaders(), validRequest.getUrl(),
+        validRequest.getQuery())).thenReturn(mockRetrofitCallback);
 
     retrofitNetworkRequestManagerWithMockApiService.sendRequest(validRequest,
         mockNetworkResponseCallback);
@@ -112,7 +116,8 @@ import static org.mockito.Mockito.when;
 
   @Test public void shouldNotifyFailureWhenInvalidResponseReceived() throws Exception {
     RequestModel validRequest = getValidRequest();
-    when(mockApiService.requestGet(any(String.class))).thenReturn(null);
+    when(mockApiService.requestGet(any(Map.class), any(String.class), any(Map.class))).thenReturn(
+        null);
 
     retrofitNetworkRequestManagerWithMockApiService.sendRequest(validRequest,
         mockNetworkResponseCallback);
