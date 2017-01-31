@@ -1,25 +1,27 @@
 package com.zireck.requestcache.library.executor;
 
-import android.os.CountDownTimer;
 import android.util.Log;
 import com.zireck.requestcache.library.cache.RequestQueue;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.network.NetworkRequestManager;
 import com.zireck.requestcache.library.network.NetworkResponseCallback;
 
-public class PendingRequestsExecutor implements RequestExecutor {
+public class PendingRequestsExecutor implements RequestExecutor, Runnable {
 
   private static final String TAG = PendingRequestsExecutor.class.getSimpleName();
   private static final int DEFAULT_REQUEST_INTERVAL_IN_MILLIS = 5000;
 
-  private CountDownTimer executorTimer;
+  private ThreadExecutor threadExecutor;
+  private long intervalTimeInMillis;
   private final NetworkRequestManager networkRequestManager;
   private boolean isExecuting = false;
   private RequestQueue requestQueue;
 
-  public PendingRequestsExecutor(NetworkRequestManager networkRequestManager) {
+  public PendingRequestsExecutor(ThreadExecutor threadExecutor,
+      NetworkRequestManager networkRequestManager) {
+    this.threadExecutor = threadExecutor;
     this.networkRequestManager = networkRequestManager;
-    setupTimer(DEFAULT_REQUEST_INTERVAL_IN_MILLIS);
+    this.intervalTimeInMillis = DEFAULT_REQUEST_INTERVAL_IN_MILLIS;
   }
 
   @Override public boolean isExecuting() {
@@ -31,7 +33,7 @@ public class PendingRequestsExecutor implements RequestExecutor {
       throw new IllegalArgumentException("Interval time must be a positive number");
     }
 
-    setupTimer(intervalTimeInMillis);
+    this.intervalTimeInMillis = intervalTimeInMillis;
   }
 
   @Override public boolean execute(RequestQueue requestQueue) {
@@ -41,8 +43,8 @@ public class PendingRequestsExecutor implements RequestExecutor {
     }
 
     this.requestQueue = requestQueue;
-    this.requestQueue.loadToMemory();
-    executeNextPendingRequest();
+    threadExecutor.execute(this);
+
     return true;
   }
 
@@ -54,6 +56,8 @@ public class PendingRequestsExecutor implements RequestExecutor {
     }
 
     isExecuting = true;
+
+    sleep(intervalTimeInMillis);
 
     RequestModel requestModel = requestQueue.next();
     networkRequestManager.sendRequest(requestModel, new NetworkResponseCallback() {
@@ -70,26 +74,23 @@ public class PendingRequestsExecutor implements RequestExecutor {
   private void handleSuccessfulResponse() {
     requestQueue.remove();
     requestQueue.persistToDisk();
-    executorTimer.start();
+    executeNextPendingRequest();
   }
 
   private void handleUnsuccessfulResponse() {
-    executorTimer.start();
+    executeNextPendingRequest();
   }
 
-  private void setupTimer(long intervalTimeInMillis) {
-    if (executorTimer != null) {
-      executorTimer.cancel();
+  @Override public void run() {
+    this.requestQueue.loadToMemory();
+    executeNextPendingRequest();
+  }
+
+  private void sleep(long intervalTimeInMillis) {
+    try {
+      Thread.sleep(intervalTimeInMillis);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
-
-    executorTimer = new CountDownTimer(intervalTimeInMillis, 1000) {
-      @Override public void onTick(long millisUntilFinished) {
-        // no-op
-      }
-
-      @Override public void onFinish() {
-        executeNextPendingRequest();
-      }
-    };
   }
 }

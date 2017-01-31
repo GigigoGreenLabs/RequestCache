@@ -44,11 +44,13 @@ public class SharedPreferencesQueue implements RequestQueue {
     String pendingRequestQueueString = sharedPreferences.getString(KEY_PENDING_REQUEST_QUEUE, "");
     if (pendingRequestQueueString.length() <= 0) {
       pendingRequestQueue = Collections.synchronizedList(new ArrayList<RequestModel>());
+      pendingRequestQueueIterator = pendingRequestQueue.iterator();
     } else {
       Type pendingRequestQueueType = new TypeToken<List<RequestModel>>() {}.getType();
       pendingRequestQueue = Collections.synchronizedList(
           (List<RequestModel>) jsonSerializer.fromJson(pendingRequestQueueString,
               pendingRequestQueueType));
+      pendingRequestQueueIterator = pendingRequestQueue.iterator();
     }
   }
 

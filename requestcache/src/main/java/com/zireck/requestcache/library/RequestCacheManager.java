@@ -6,8 +6,10 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import com.zireck.requestcache.library.cache.RequestQueue;
 import com.zireck.requestcache.library.cache.SharedPreferencesQueue;
+import com.zireck.requestcache.library.executor.JobExecutor;
 import com.zireck.requestcache.library.executor.PendingRequestsExecutor;
 import com.zireck.requestcache.library.executor.RequestExecutor;
+import com.zireck.requestcache.library.executor.ThreadExecutor;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.network.ApiService;
 import com.zireck.requestcache.library.network.ApiServiceBuilder;
@@ -23,6 +25,7 @@ public class RequestCacheManager implements RequestCache {
 
   private static RequestCacheManager INSTANCE = null;
 
+  private final ThreadExecutor threadExecutor;
   private final SharedPreferences sharedPreferences;
   private final JsonSerializer jsonSerializer;
   private final RequestQueue requestQueue;
@@ -40,13 +43,14 @@ public class RequestCacheManager implements RequestCache {
   }
 
   private RequestCacheManager(Context context) {
+    threadExecutor = JobExecutor.getInstance();
     sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     jsonSerializer = new GsonSerializer();
     requestQueue = new SharedPreferencesQueue(sharedPreferences, jsonSerializer);
     apiServiceBuilder = new ApiServiceBuilder();
     apiService = apiServiceBuilder.build();
     networkRequestManager = new RetrofitNetworkRequestManager(apiService);
-    requestExecutor = new PendingRequestsExecutor(networkRequestManager);
+    requestExecutor = new PendingRequestsExecutor(threadExecutor, networkRequestManager);
   }
 
   @Override public void setRequestIntervalTime(long intervalTimeInMillis) {

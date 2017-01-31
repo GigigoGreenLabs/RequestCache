@@ -3,11 +3,11 @@ package com.zireck.requestcache.library.network;
 import android.util.Log;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.util.MethodType;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 
 public class RetrofitNetworkRequestManager implements NetworkRequestManager {
@@ -15,53 +15,35 @@ public class RetrofitNetworkRequestManager implements NetworkRequestManager {
   private static final String TAG = RetrofitNetworkRequestManager.class.getSimpleName();
 
   private final ApiService apiService;
-  private Callback<ResponseBody> retrofitCallback;
   private NetworkResponseCallback networkResponseCallback;
 
   public RetrofitNetworkRequestManager(ApiService apiService) {
     this.apiService = apiService;
-    setupRetrofitCallback();
   }
 
   @Override public void sendRequest(RequestModel requestModel,
       NetworkResponseCallback networkResponseCallback) {
+    if (networkResponseCallback == null) {
+      Log.e(TAG, "Unable to deliver Retrofit request response. You must provide a valid callback.");
+      return;
+    }
+
     this.networkResponseCallback = networkResponseCallback;
 
     Call<ResponseBody> retrofitCall = composeRequestFor(requestModel);
-
     if (retrofitCall == null) {
       Log.e(TAG, "Invalid Retrofit call");
       networkResponseCallback.onFailure();
       return;
     }
 
-    retrofitCall.enqueue(retrofitCallback);
-  }
-
-  private void setupRetrofitCallback() {
-    retrofitCallback = new Callback<ResponseBody>() {
-      @Override public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-        if (networkResponseCallback == null) {
-          Log.e(TAG, "Cannot deliver Retrofit request response");
-          return;
-        }
-
-        if (response.isSuccessful()) {
-          networkResponseCallback.onSuccess();
-        } else {
-          networkResponseCallback.onFailure();
-        }
-      }
-
-      @Override public void onFailure(Call<ResponseBody> call, Throwable t) {
-        if (networkResponseCallback == null) {
-          Log.e(TAG, "Cannot deliver Retrofit request response");
-          return;
-        }
-
-        networkResponseCallback.onFailure();
-      }
-    };
+    try {
+      Response<ResponseBody> response = retrofitCall.execute();
+      handleResponse(response);
+    } catch (IOException e) {
+      e.printStackTrace();
+      networkResponseCallback.onFailure();
+    }
   }
 
   private Call<ResponseBody> composeRequestFor(RequestModel requestModel) {
@@ -82,5 +64,13 @@ public class RetrofitNetworkRequestManager implements NetworkRequestManager {
     }
 
     return request;
+  }
+
+  private void handleResponse(Response<ResponseBody> response) {
+    if (response != null && response.isSuccessful()) {
+      networkResponseCallback.onSuccess();
+    } else {
+      networkResponseCallback.onFailure();
+    }
   }
 }
