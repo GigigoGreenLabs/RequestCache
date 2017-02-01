@@ -1,7 +1,7 @@
 # RequestCache [![Build Status](https://travis-ci.org/Zireck/RequestCache.svg?branch=master)](https://travis-ci.org/Zireck/RequestCache) [![codecov](https://codecov.io/gh/Zireck/RequestCache/branch/master/graph/badge.svg)](https://codecov.io/gh/Zireck/RequestCache)
 *-Work in progress-*
 
-See: [Reactive approach](https://github.com/Zireck/RequestCache/tree/reactive).
+See: [Reactive approach](https://github.com/Zireck/RequestCache/tree/reactive)
 
 This is a library that allows you to cache and retry failed HTTP requests.
 You can interact through this interface:
