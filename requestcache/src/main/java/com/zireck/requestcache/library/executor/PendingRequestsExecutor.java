@@ -4,18 +4,21 @@ import android.util.Log;
 import com.zireck.requestcache.library.cache.RequestQueue;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.network.NetworkRequestManager;
-import com.zireck.requestcache.library.network.NetworkResponseCallback;
+import io.reactivex.Observable;
+import io.reactivex.observers.DisposableObserver;
+import io.reactivex.schedulers.Schedulers;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-public class PendingRequestsExecutor implements RequestExecutor, Runnable {
+public class PendingRequestsExecutor implements RequestExecutor {
 
   private static final String TAG = PendingRequestsExecutor.class.getSimpleName();
   private static final int DEFAULT_REQUEST_INTERVAL_IN_MILLIS = 5000;
-
-  private ThreadExecutor threadExecutor;
-  private long intervalTimeInMillis;
+  private final ThreadExecutor threadExecutor;
   private final NetworkRequestManager networkRequestManager;
+  private long intervalTimeInMillis;
   private boolean isExecuting = false;
-  private RequestQueue requestQueue;
 
   public PendingRequestsExecutor(ThreadExecutor threadExecutor,
       NetworkRequestManager networkRequestManager) {
@@ -36,61 +39,33 @@ public class PendingRequestsExecutor implements RequestExecutor, Runnable {
     this.intervalTimeInMillis = intervalTimeInMillis;
   }
 
-  @Override public boolean execute(RequestQueue requestQueue) {
+  @SuppressWarnings("unchecked") @Override
+  public void execute(RequestQueue requestQueue, DisposableObserver observer) {
     if (requestQueue == null) {
       Log.e(TAG, "Invalid request list given");
-      return false;
-    }
-
-    this.requestQueue = requestQueue;
-    threadExecutor.execute(this);
-
-    return true;
-  }
-
-  @Override public void run() {
-    this.requestQueue.loadToMemory();
-    executeNextPendingRequest();
-  }
-
-  private void executeNextPendingRequest() {
-    if (requestQueue.isEmpty() || !requestQueue.hasNext()) {
-      isExecuting = false;
-      Log.d(TAG, "No pending requests left.");
       return;
     }
 
-    isExecuting = true;
-
-    sleep(intervalTimeInMillis);
-
-    RequestModel requestModel = requestQueue.next();
-    networkRequestManager.sendRequest(requestModel, new NetworkResponseCallback() {
-      @Override public void onSuccess() {
-        handleSuccessfulResponse();
-      }
-
-      @Override public void onFailure() {
-        handleUnsuccessfulResponse();
-      }
-    });
-  }
-
-  private void handleSuccessfulResponse() {
-    requestQueue.remove();
-    requestQueue.persistToDisk();
-    executeNextPendingRequest();
-  }
-
-  private void handleUnsuccessfulResponse() {
-    executeNextPendingRequest();
-  }
-
-  private void sleep(long intervalTimeInMillis) {
-    try {
-      Thread.sleep(intervalTimeInMillis);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+    List<RequestModel> queue = Collections.synchronizedList(requestQueue.getQueue());
+    Observable.zip(
+        Observable.just(queue).flatMapIterable(request -> request),
+        Observable.interval(intervalTimeInMillis, TimeUnit.MILLISECONDS),
+        (item, timer) -> item)
+        .doOnSubscribe(disposable -> requestQueue.loadToMemory())
+        .doOnNext(request -> {
+          networkRequestManager.getRequestStreamFor(request)
+              .subscribe(response -> {
+                if (response.isSuccessful()) {
+                  queue.remove(request);
+                }
+              });
+        })
+        .doOnComplete(requestQueue::persistToDisk)
+        .doOnComplete(() -> {
+          Log.d(TAG, "No pending requests left.");
+          isExecuting = false;
+        })
+        .subscribeOn(Schedulers.from(threadExecutor))
+        .subscribeWith(observer);
   }
 }

@@ -56,7 +56,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test public void shouldReturnFailureWhenNullRequestGiven() throws Exception {
-    retrofitNetworkRequestManagerWithMockApiService.sendRequest(null, mockNetworkResponseCallback);
+    retrofitNetworkRequestManagerWithMockApiService.getRequestStream(null, mockNetworkResponseCallback);
 
     verify(mockNetworkResponseCallback, times(1)).onFailure();
     verifyNoMoreInteractions(mockNetworkResponseCallback);
@@ -110,7 +110,7 @@ import static org.mockito.Mockito.when;
     when(mockApiService.requestGet(validRequest.getHeaders(), validRequest.getUrl(),
         validRequest.getQuery())).thenReturn(mockRetrofitCall);
 
-    retrofitNetworkRequestManagerWithMockApiService.sendRequest(validRequest,
+    retrofitNetworkRequestManagerWithMockApiService.getRequestStream(validRequest,
         mockNetworkResponseCallback);
     retrofitNetworkRequestManagerWithMockApiService.run();
 
@@ -125,7 +125,7 @@ import static org.mockito.Mockito.when;
     when(mockApiService.requestGet(validRequest.getHeaders(), validRequest.getUrl(),
         validRequest.getQuery())).thenReturn(mockRetrofitCall);
 
-    retrofitNetworkRequestManagerWithMockApiService.sendRequest(validRequest,
+    retrofitNetworkRequestManagerWithMockApiService.getRequestStream(validRequest,
         mockNetworkResponseCallback);
     retrofitNetworkRequestManagerWithMockApiService.run();
 
@@ -137,7 +137,7 @@ import static org.mockito.Mockito.when;
     when(mockApiService.requestGet(any(Map.class), any(String.class), any(Map.class))).thenReturn(
         null);
 
-    retrofitNetworkRequestManagerWithMockApiService.sendRequest(validRequest,
+    retrofitNetworkRequestManagerWithMockApiService.getRequestStream(validRequest,
         mockNetworkResponseCallback);
     retrofitNetworkRequestManagerWithMockApiService.run();
 

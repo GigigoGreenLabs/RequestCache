@@ -7,6 +7,6 @@ public interface RequestCache {
   void setRequestIntervalTime(long intervalTimeInMillis);
   void enqueueRequest(RequestModel requestModel);
   void enqueueRequests(List<RequestModel> requestModels);
-  boolean sendPendingRequests();
+  void sendPendingRequests();
   void clearRequestsCache();
 }

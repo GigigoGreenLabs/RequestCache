@@ -11,4 +11,6 @@ interface IterableQueue {
   RequestModel next();
   void remove();
   boolean clear();
+  List<RequestModel> getQueue();
+  void saveQueue(List<RequestModel> queue);
 }

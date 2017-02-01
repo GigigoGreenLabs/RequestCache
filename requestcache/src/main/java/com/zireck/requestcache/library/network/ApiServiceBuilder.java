@@ -1,6 +1,6 @@
 package com.zireck.requestcache.library.network;
 
-import com.zireck.requestcache.library.BuildConfig;
+import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -31,6 +31,7 @@ public class ApiServiceBuilder {
     }
 
     retrofitBuilder.addConverterFactory(GsonConverterFactory.create());
+    retrofitBuilder.addCallAdapterFactory(RxJava2CallAdapterFactory.create());
 
     if (true) {
     // TODO if (BuildConfig.DEBUG) {

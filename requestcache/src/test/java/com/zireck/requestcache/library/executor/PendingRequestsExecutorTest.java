@@ -88,7 +88,7 @@ import static org.mockito.Mockito.when;
     pendingRequestsExecutor.run();
 
     verify(mockRequestQueue).next();
-    verify(mockNetworkRequestManager).sendRequest(eq(mockRequestModel),
+    verify(mockNetworkRequestManager).getRequestStream(eq(mockRequestModel),
         any(NetworkResponseCallback.class));
     assertThat(executeResult, is(true));
     assertThat(pendingRequestsExecutor.isExecuting(), is(true));
@@ -119,7 +119,7 @@ import static org.mockito.Mockito.when;
     inOrder.verify(mockRequestQueue).isEmpty();
     inOrder.verify(mockRequestQueue).hasNext();
     inOrder.verify(mockRequestQueue).next();
-    verify(mockNetworkRequestManager).sendRequest(any(RequestModel.class),
+    verify(mockNetworkRequestManager).getRequestStream(any(RequestModel.class),
         networkResponseCallbackArgumentCaptor.capture());
     networkResponseCallbackArgumentCaptor.getValue().onSuccess();
     inOrder.verify(mockRequestQueue).remove();

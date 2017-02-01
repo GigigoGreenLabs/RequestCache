@@ -17,6 +17,7 @@ import com.zireck.requestcache.library.network.NetworkRequestManager;
 import com.zireck.requestcache.library.network.RetrofitNetworkRequestManager;
 import com.zireck.requestcache.library.util.GsonSerializer;
 import com.zireck.requestcache.library.util.JsonSerializer;
+import io.reactivex.observers.DisposableObserver;
 import java.util.List;
 
 public class RequestCacheManager implements RequestCache {
@@ -49,7 +50,7 @@ public class RequestCacheManager implements RequestCache {
     requestQueue = new SharedPreferencesQueue(sharedPreferences, jsonSerializer);
     apiServiceBuilder = new ApiServiceBuilder();
     apiService = apiServiceBuilder.build();
-    networkRequestManager = new RetrofitNetworkRequestManager(threadExecutor, apiService);
+    networkRequestManager = new RetrofitNetworkRequestManager(apiService);
     requestExecutor = new PendingRequestsExecutor(threadExecutor, networkRequestManager);
   }
 
@@ -67,13 +68,25 @@ public class RequestCacheManager implements RequestCache {
     requestQueue.persistToDisk();
   }
 
-  @Override public boolean sendPendingRequests() {
+  @Override public void sendPendingRequests() {
     if (requestExecutor.isExecuting()) {
       Log.e(TAG, "RequestExecutor is already in progress. Try later.");
-      return false;
+      return;
     }
 
-    return requestExecutor.execute(requestQueue);
+    requestExecutor.execute(requestQueue, new DisposableObserver<RequestModel>() {
+      @Override public void onNext(RequestModel requestModel) {
+        Log.d(TAG, "onNext request sent: " + requestModel.getBaseUrl());
+      }
+
+      @Override public void onError(Throwable e) {
+        Log.e(TAG, "onError");
+      }
+
+      @Override public void onComplete() {
+        Log.d(TAG, "onComplete");
+      }
+    });
   }
 
   @Override public void clearRequestsCache() {

@@ -87,6 +87,14 @@ public class SharedPreferencesQueue implements RequestQueue {
     pendingRequestQueueIterator.remove();
   }
 
+  @Override public List<RequestModel> getQueue() {
+    return pendingRequestQueue;
+  }
+
+  @Override public void saveQueue(List<RequestModel> queue) {
+    pendingRequestQueue = queue;
+  }
+
   @Override public boolean clear() {
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putString(KEY_PENDING_REQUEST_QUEUE, "");
