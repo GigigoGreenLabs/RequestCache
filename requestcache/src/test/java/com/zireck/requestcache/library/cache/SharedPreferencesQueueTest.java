@@ -45,7 +45,6 @@ import static org.mockito.Mockito.when;
     verify(mockSharedPreferences).getString("PENDING_REQUEST_QUEUE", "");
     assertThat(sharedPreferencesQueue.isEmpty(), is(true));
     assertThat(sharedPreferencesQueue.hasNext(), is(not(true)));
-    assertThat(sharedPreferencesQueue.next(), nullValue());
   }
 
   @Test public void shouldHaveNextItemWhenQueueIsNotEmpty() throws Exception {
