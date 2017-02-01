@@ -1,7 +1,9 @@
 package com.zireck.requestcache.library.network;
 
+import com.zireck.requestcache.library.executor.ThreadExecutor;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.util.MethodType;
+import java.io.IOException;
 import java.util.Map;
 import okhttp3.HttpUrl;
 import okhttp3.ResponseBody;
@@ -14,7 +16,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -22,17 +23,19 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class) public class RetrofitNetworkRequestManagerTest {
 
-  @Mock ApiService mockApiService;
-  @Mock NetworkResponseCallback mockNetworkResponseCallback;
-  private RetrofitNetworkRequestManager retrofitNetworkRequestManagerWithRealApiService;
+  @Mock private ThreadExecutor mockThreadExecutor;
+  @Mock private ApiService mockApiService;
+  @Mock private NetworkResponseCallback mockNetworkResponseCallback;
   private RetrofitNetworkRequestManager retrofitNetworkRequestManagerWithMockApiService;
   private MockWebServer mockWebServer;
   private ApiService apiService;
@@ -48,16 +51,16 @@ import static org.mockito.Mockito.when;
     ApiServiceBuilder apiServiceBuilder = new ApiServiceBuilder(mockUrl.toString());
     apiService = apiServiceBuilder.build();
 
-    retrofitNetworkRequestManagerWithRealApiService = new RetrofitNetworkRequestManager(apiService);
     retrofitNetworkRequestManagerWithMockApiService =
-        new RetrofitNetworkRequestManager(mockApiService);
+        new RetrofitNetworkRequestManager(mockThreadExecutor, mockApiService);
   }
 
   @Test public void shouldReturnFailureWhenNullRequestGiven() throws Exception {
-    retrofitNetworkRequestManagerWithRealApiService.sendRequest(null, mockNetworkResponseCallback);
+    retrofitNetworkRequestManagerWithMockApiService.sendRequest(null, mockNetworkResponseCallback);
 
     verify(mockNetworkResponseCallback, times(1)).onFailure();
     verifyNoMoreInteractions(mockNetworkResponseCallback);
+    verifyZeroInteractions(mockThreadExecutor);
   }
 
   @Test public void shouldReturnValidCallWhenValidRequestGiven() throws Exception {
@@ -101,17 +104,32 @@ import static org.mockito.Mockito.when;
     assertThat(response.code(), is(404));
   }
 
-  @Test public void shouldEnqueueRequestWhenValidRequestReceived() throws Exception {
+  @Test public void shouldExecuteRequestWhenValidRequestComposed() throws Exception {
     RequestModel validRequest = getValidRequest();
-    Call<ResponseBody> mockRetrofitCallback = mock(Call.class);
+    Call<ResponseBody> mockRetrofitCall = mock(Call.class);
     when(mockApiService.requestGet(validRequest.getHeaders(), validRequest.getUrl(),
-        validRequest.getQuery())).thenReturn(mockRetrofitCallback);
+        validRequest.getQuery())).thenReturn(mockRetrofitCall);
 
     retrofitNetworkRequestManagerWithMockApiService.sendRequest(validRequest,
         mockNetworkResponseCallback);
+    retrofitNetworkRequestManagerWithMockApiService.run();
 
-    verify(mockRetrofitCallback, times(1)).enqueue(any(Callback.class));
-    verifyNoMoreInteractions(mockRetrofitCallback);
+    verify(mockRetrofitCall, times(1)).execute();
+    verifyNoMoreInteractions(mockRetrofitCall);
+  }
+
+  @Test public void shouldNotifyFailureWhenExceptionThrownWhileExecutingRequest() throws Exception {
+    RequestModel validRequest = getValidRequest();
+    Call<ResponseBody> mockRetrofitCall = mock(Call.class);
+    doThrow(new IOException()).when(mockRetrofitCall).execute();
+    when(mockApiService.requestGet(validRequest.getHeaders(), validRequest.getUrl(),
+        validRequest.getQuery())).thenReturn(mockRetrofitCall);
+
+    retrofitNetworkRequestManagerWithMockApiService.sendRequest(validRequest,
+        mockNetworkResponseCallback);
+    retrofitNetworkRequestManagerWithMockApiService.run();
+
+    verify(mockNetworkResponseCallback, times(1)).onFailure();
   }
 
   @Test public void shouldNotifyFailureWhenInvalidResponseReceived() throws Exception {
@@ -121,6 +139,7 @@ import static org.mockito.Mockito.when;
 
     retrofitNetworkRequestManagerWithMockApiService.sendRequest(validRequest,
         mockNetworkResponseCallback);
+    retrofitNetworkRequestManagerWithMockApiService.run();
 
     verify(mockNetworkResponseCallback, times(1)).onFailure();
     verifyNoMoreInteractions(mockNetworkResponseCallback);

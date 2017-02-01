@@ -1,6 +1,7 @@
 package com.zireck.requestcache.library.network;
 
 import android.util.Log;
+import com.zireck.requestcache.library.executor.ThreadExecutor;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.util.MethodType;
 import java.io.IOException;
@@ -10,14 +11,17 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class RetrofitNetworkRequestManager implements NetworkRequestManager {
+public class RetrofitNetworkRequestManager implements NetworkRequestManager, Runnable {
 
   private static final String TAG = RetrofitNetworkRequestManager.class.getSimpleName();
 
+  private final ThreadExecutor threadExecutor;
   private final ApiService apiService;
+  private RequestModel requestModel;
   private NetworkResponseCallback networkResponseCallback;
 
-  public RetrofitNetworkRequestManager(ApiService apiService) {
+  public RetrofitNetworkRequestManager(ThreadExecutor threadExecutor, ApiService apiService) {
+    this.threadExecutor = threadExecutor;
     this.apiService = apiService;
   }
 
@@ -28,8 +32,19 @@ public class RetrofitNetworkRequestManager implements NetworkRequestManager {
       return;
     }
 
+    if (requestModel == null) {
+      Log.e(TAG, "Invalid request model");
+      networkResponseCallback.onFailure();
+      return;
+    }
+
+    this.requestModel = requestModel;
     this.networkResponseCallback = networkResponseCallback;
 
+    threadExecutor.execute(this);
+  }
+
+  @Override public void run() {
     Call<ResponseBody> retrofitCall = composeRequestFor(requestModel);
     if (retrofitCall == null) {
       Log.e(TAG, "Invalid Retrofit call");
@@ -47,11 +62,6 @@ public class RetrofitNetworkRequestManager implements NetworkRequestManager {
   }
 
   private Call<ResponseBody> composeRequestFor(RequestModel requestModel) {
-    if (requestModel == null) {
-      Log.e(TAG, "Invalid request model");
-      return null;
-    }
-
     Call<ResponseBody> request = null;
     Map headers = requestModel.getHeaders() == null ? new HashMap<>() : requestModel.getHeaders();
     Map query = requestModel.getQuery() == null ? new HashMap<>() : requestModel.getQuery();

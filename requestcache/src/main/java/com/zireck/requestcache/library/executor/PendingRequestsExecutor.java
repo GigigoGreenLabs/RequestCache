@@ -48,6 +48,11 @@ public class PendingRequestsExecutor implements RequestExecutor, Runnable {
     return true;
   }
 
+  @Override public void run() {
+    this.requestQueue.loadToMemory();
+    executeNextPendingRequest();
+  }
+
   private void executeNextPendingRequest() {
     if (requestQueue.isEmpty() || !requestQueue.hasNext()) {
       isExecuting = false;
@@ -78,11 +83,6 @@ public class PendingRequestsExecutor implements RequestExecutor, Runnable {
   }
 
   private void handleUnsuccessfulResponse() {
-    executeNextPendingRequest();
-  }
-
-  @Override public void run() {
-    this.requestQueue.loadToMemory();
     executeNextPendingRequest();
   }
 

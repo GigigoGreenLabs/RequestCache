@@ -49,7 +49,7 @@ public class RequestCacheManager implements RequestCache {
     requestQueue = new SharedPreferencesQueue(sharedPreferences, jsonSerializer);
     apiServiceBuilder = new ApiServiceBuilder();
     apiService = apiServiceBuilder.build();
-    networkRequestManager = new RetrofitNetworkRequestManager(apiService);
+    networkRequestManager = new RetrofitNetworkRequestManager(threadExecutor, apiService);
     requestExecutor = new PendingRequestsExecutor(threadExecutor, networkRequestManager);
   }
 

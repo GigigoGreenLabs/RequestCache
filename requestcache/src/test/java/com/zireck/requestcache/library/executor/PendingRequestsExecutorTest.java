@@ -9,16 +9,22 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -27,12 +33,14 @@ import static org.mockito.Mockito.when;
 
   private PendingRequestsExecutor pendingRequestsExecutor;
 
+  @Mock private ThreadExecutor threadExecutor;
   @Mock private NetworkRequestManager mockNetworkRequestManager;
 
   @Before public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
 
-    pendingRequestsExecutor = new PendingRequestsExecutor(mockNetworkRequestManager);
+    pendingRequestsExecutor =
+        new PendingRequestsExecutor(threadExecutor, mockNetworkRequestManager);
   }
 
   @Test public void shouldNotBeExecutingRightAfterItsInstantiated() throws Exception {
@@ -60,6 +68,7 @@ import static org.mockito.Mockito.when;
     when(mockRequestQueue.hasNext()).thenReturn(false);
 
     pendingRequestsExecutor.execute(mockRequestQueue);
+    pendingRequestsExecutor.run();
 
     verify(mockRequestQueue).loadToMemory();
     verify(mockRequestQueue).isEmpty();
@@ -76,6 +85,7 @@ import static org.mockito.Mockito.when;
     when(mockRequestQueue.next()).thenReturn(mockRequestModel);
 
     boolean executeResult = pendingRequestsExecutor.execute(mockRequestQueue);
+    pendingRequestsExecutor.run();
 
     verify(mockRequestQueue).next();
     verify(mockNetworkRequestManager).sendRequest(eq(mockRequestModel),
@@ -88,20 +98,33 @@ import static org.mockito.Mockito.when;
     ArgumentCaptor<NetworkResponseCallback> networkResponseCallbackArgumentCaptor =
         ArgumentCaptor.forClass(NetworkResponseCallback.class);
     RequestQueue mockRequestQueue = mock(RequestQueue.class);
-    when(mockRequestQueue.isEmpty()).thenReturn(false);
+    doAnswer(new Answer() {
+      private boolean firstTime = true;
+      @Override public Object answer(InvocationOnMock invocation) throws Throwable {
+        if (firstTime) {
+          firstTime = false;
+          return false;
+        }
+        return true;
+      }
+    }).when(mockRequestQueue).isEmpty();
     when(mockRequestQueue.hasNext()).thenReturn(true);
 
     pendingRequestsExecutor.execute(mockRequestQueue);
+    pendingRequestsExecutor.run();
 
-    verify(mockRequestQueue).loadToMemory();
-    verify(mockRequestQueue).isEmpty();
-    verify(mockRequestQueue).hasNext();
-    verify(mockRequestQueue).next();
+    verify(threadExecutor, times(1)).execute(pendingRequestsExecutor);
+    InOrder inOrder = inOrder(mockRequestQueue);
+    inOrder.verify(mockRequestQueue).loadToMemory();
+    inOrder.verify(mockRequestQueue).isEmpty();
+    inOrder.verify(mockRequestQueue).hasNext();
+    inOrder.verify(mockRequestQueue).next();
     verify(mockNetworkRequestManager).sendRequest(any(RequestModel.class),
         networkResponseCallbackArgumentCaptor.capture());
     networkResponseCallbackArgumentCaptor.getValue().onSuccess();
-    verify(mockRequestQueue).remove();
-    verify(mockRequestQueue).persistToDisk();
+    inOrder.verify(mockRequestQueue).remove();
+    inOrder.verify(mockRequestQueue).persistToDisk();
+    inOrder.verify(mockRequestQueue).isEmpty();
     verifyNoMoreInteractions(mockRequestQueue);
   }
 
