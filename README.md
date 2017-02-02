@@ -32,4 +32,4 @@ new RequestModel.Builder<String>()
 * If automatic, it'd be a good idea to register a Broadcast Receiver subscribed to the following intent-filter *android.net.conn.CONNECTIVITY_CHANGE*
 * Maybe use *AlarmManager* to schedule retries.
 * Alternative implementation of [RequestQueue](https://github.com/Zireck/RequestCache/blob/master/requestcache/src/main/java/com/zireck/requestcache/library/cache/RequestQueue.java) using SQLite (or even a plain old file) instead of [SharedPreferences](https://github.com/Zireck/RequestCache/blob/master/requestcache/src/main/java/com/zireck/requestcache/library/cache/SharedPreferencesQueue.java).
-* Alternative implementation using RxJava to avoid callback hell.
+* ~~Alternative implementation using RxJava to avoid callback hell~~. [Done](https://github.com/Zireck/RequestCache/tree/reactive).
