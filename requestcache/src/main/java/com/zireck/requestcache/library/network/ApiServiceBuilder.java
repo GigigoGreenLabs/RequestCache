@@ -1,5 +1,6 @@
 package com.zireck.requestcache.library.network;
 
+import com.facebook.stetho.okhttp3.StethoInterceptor;
 import com.zireck.requestcache.library.BuildConfig;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -38,6 +39,7 @@ public class ApiServiceBuilder {
       loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
       OkHttpClient.Builder client = new OkHttpClient.Builder();
       client.addInterceptor(loggingInterceptor);
+      client.addNetworkInterceptor(new StethoInterceptor());
       retrofitBuilder.client(client.build());
     }
 
