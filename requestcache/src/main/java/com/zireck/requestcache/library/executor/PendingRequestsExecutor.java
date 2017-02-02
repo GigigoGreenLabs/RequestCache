@@ -7,7 +7,6 @@ import com.zireck.requestcache.library.network.NetworkRequestManager;
 import io.reactivex.Observable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -46,22 +45,22 @@ public class PendingRequestsExecutor implements RequestExecutor {
       return;
     }
 
-    List<RequestModel> queue = Collections.synchronizedList(requestQueue.getQueue());
+    requestQueue.loadToMemory();
+    List<RequestModel> queue = requestQueue.getQueue();
     Observable.zip(
-        Observable.just(queue).flatMapIterable(request -> request),
+        Observable.fromArray(queue).flatMapIterable(request -> request),
         Observable.interval(intervalTimeInMillis, TimeUnit.MILLISECONDS),
-        (item, timer) -> item)
-        .doOnSubscribe(disposable -> requestQueue.loadToMemory())
-        .doOnNext(request -> {
+        (request, timer) -> request)
+        .doOnSubscribe(disposable -> Log.d(TAG, "Starting to send requests."))
+        .doOnNext(request ->
           networkRequestManager.getRequestStreamFor(request)
-              .subscribe(response -> {
-                if (response.isSuccessful()) {
-                  queue.remove(request);
-                }
-              });
-        })
-        .doOnComplete(requestQueue::persistToDisk)
+              .filter(response -> response.isSuccessful())
+              .doOnComplete(() -> queue.remove(request))
+              .subscribe()
+        )
         .doOnComplete(() -> {
+          requestQueue.saveQueue(queue);
+          requestQueue.persistToDisk();
           Log.d(TAG, "No pending requests left.");
           isExecuting = false;
         })

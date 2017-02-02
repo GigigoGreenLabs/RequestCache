@@ -76,7 +76,7 @@ public class RequestCacheManager implements RequestCache {
 
     requestExecutor.execute(requestQueue, new DisposableObserver<RequestModel>() {
       @Override public void onNext(RequestModel requestModel) {
-        Log.d(TAG, "onNext request sent: " + requestModel.getBaseUrl());
+        Log.d(TAG, "onNext");
       }
 
       @Override public void onError(Throwable e) {
