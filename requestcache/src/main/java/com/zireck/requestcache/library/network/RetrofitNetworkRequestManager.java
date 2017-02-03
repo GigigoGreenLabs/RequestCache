@@ -1,8 +1,8 @@
 package com.zireck.requestcache.library.network;
 
-import android.util.Log;
 import com.zireck.requestcache.library.executor.ThreadExecutor;
 import com.zireck.requestcache.library.model.RequestModel;
+import com.zireck.requestcache.library.util.logger.Logger;
 import com.zireck.requestcache.library.util.MethodType;
 import java.io.IOException;
 import java.util.HashMap;
@@ -13,27 +13,28 @@ import retrofit2.Response;
 
 public class RetrofitNetworkRequestManager implements NetworkRequestManager, Runnable {
 
-  private static final String TAG = RetrofitNetworkRequestManager.class.getSimpleName();
-
   private final ThreadExecutor threadExecutor;
   private final ApiService apiService;
+  private final Logger logger;
   private RequestModel requestModel;
   private NetworkResponseCallback networkResponseCallback;
 
-  public RetrofitNetworkRequestManager(ThreadExecutor threadExecutor, ApiService apiService) {
+  public RetrofitNetworkRequestManager(ThreadExecutor threadExecutor, ApiService apiService,
+      Logger logger) {
     this.threadExecutor = threadExecutor;
     this.apiService = apiService;
+    this.logger = logger;
   }
 
   @Override public void sendRequest(RequestModel requestModel,
       NetworkResponseCallback networkResponseCallback) {
     if (networkResponseCallback == null) {
-      Log.e(TAG, "Unable to deliver Retrofit request response. You must provide a valid callback.");
+      logger.e("Unable to deliver Retrofit request response. You must provide a valid callback.");
       return;
     }
 
     if (requestModel == null) {
-      Log.e(TAG, "Invalid request model");
+      logger.e("Invalid request model");
       networkResponseCallback.onFailure();
       return;
     }
@@ -47,7 +48,7 @@ public class RetrofitNetworkRequestManager implements NetworkRequestManager, Run
   @Override public void run() {
     Call<ResponseBody> retrofitCall = composeRequestFor(requestModel);
     if (retrofitCall == null) {
-      Log.e(TAG, "Invalid Retrofit call");
+      logger.e("Invalid Retrofit call");
       networkResponseCallback.onFailure();
       return;
     }

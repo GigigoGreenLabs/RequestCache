@@ -4,7 +4,9 @@ import com.zireck.requestcache.library.cache.RequestQueue;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.network.NetworkRequestManager;
 import com.zireck.requestcache.library.network.NetworkResponseCallback;
+import com.zireck.requestcache.library.util.logger.Logger;
 import com.zireck.requestcache.library.util.MethodType;
+import com.zireck.requestcache.library.util.sleeper.Sleeper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,12 +37,14 @@ import static org.mockito.Mockito.when;
 
   @Mock private ThreadExecutor threadExecutor;
   @Mock private NetworkRequestManager mockNetworkRequestManager;
+  @Mock private Logger logger;
+  @Mock private Sleeper sleeper;
 
   @Before public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
 
     pendingRequestsExecutor =
-        new PendingRequestsExecutor(threadExecutor, mockNetworkRequestManager);
+        new PendingRequestsExecutor(threadExecutor, mockNetworkRequestManager, logger, sleeper);
   }
 
   @Test public void shouldNotBeExecutingRightAfterItsInstantiated() throws Exception {

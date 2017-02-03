@@ -2,6 +2,7 @@ package com.zireck.requestcache.library.network;
 
 import com.zireck.requestcache.library.executor.ThreadExecutor;
 import com.zireck.requestcache.library.model.RequestModel;
+import com.zireck.requestcache.library.util.logger.Logger;
 import com.zireck.requestcache.library.util.MethodType;
 import java.io.IOException;
 import java.util.Map;
@@ -36,6 +37,7 @@ import static org.mockito.Mockito.when;
   @Mock private ThreadExecutor mockThreadExecutor;
   @Mock private ApiService mockApiService;
   @Mock private NetworkResponseCallback mockNetworkResponseCallback;
+  @Mock private Logger logger;
   private RetrofitNetworkRequestManager retrofitNetworkRequestManagerWithMockApiService;
   private MockWebServer mockWebServer;
   private ApiService apiService;
@@ -52,7 +54,7 @@ import static org.mockito.Mockito.when;
     apiService = apiServiceBuilder.build();
 
     retrofitNetworkRequestManagerWithMockApiService =
-        new RetrofitNetworkRequestManager(mockThreadExecutor, mockApiService);
+        new RetrofitNetworkRequestManager(mockThreadExecutor, mockApiService, logger);
   }
 
   @Test public void shouldReturnFailureWhenNullRequestGiven() throws Exception {

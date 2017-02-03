@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.google.gson.reflect.TypeToken;
 import com.zireck.requestcache.library.cache.RequestQueue;
 import com.zireck.requestcache.library.model.RequestModel;
-import com.zireck.requestcache.library.util.JsonSerializer;
+import com.zireck.requestcache.library.util.serializer.JsonSerializer;
 import java.lang.reflect.Type;
 import java.util.List;
 

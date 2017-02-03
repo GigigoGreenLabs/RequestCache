@@ -1,11 +1,11 @@
 package com.zireck.requestcache.library.cache.sharedpreferences;
 
 import android.content.SharedPreferences;
-import android.util.Log;
 import com.google.gson.reflect.TypeToken;
 import com.zireck.requestcache.library.cache.RequestQueue;
 import com.zireck.requestcache.library.model.RequestModel;
-import com.zireck.requestcache.library.util.JsonSerializer;
+import com.zireck.requestcache.library.util.serializer.JsonSerializer;
+import com.zireck.requestcache.library.util.logger.Logger;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,18 +14,19 @@ import java.util.List;
 
 public class SharedPreferencesQueue implements RequestQueue {
 
-  private static final String TAG = SharedPreferencesQueue.class.getSimpleName();
   private static final String KEY_PENDING_REQUEST_QUEUE = "PENDING_REQUEST_QUEUE";
 
   private final SharedPreferences sharedPreferences;
+  private final Logger logger;
   private final JsonSerializer jsonSerializer;
   private List<RequestModel> pendingRequestQueue =
       Collections.synchronizedList(new ArrayList<RequestModel>());
   private Iterator<RequestModel> pendingRequestQueueIterator;
 
-  public SharedPreferencesQueue(SharedPreferences sharedPreferences,
+  public SharedPreferencesQueue(SharedPreferences sharedPreferences, Logger logger,
       JsonSerializer jsonSerializer) {
     this.sharedPreferences = sharedPreferences;
+    this.logger = logger;
     this.jsonSerializer = jsonSerializer;
   }
 
@@ -81,7 +82,7 @@ public class SharedPreferencesQueue implements RequestQueue {
 
   @Override public void remove() {
     if (pendingRequestQueueIterator == null) {
-      Log.e(TAG, "Cannot delete the current element when the iterator is null.");
+      logger.e("Cannot delete the current element when the iterator is null.");
       return;
     }
 

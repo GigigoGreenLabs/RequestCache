@@ -1,4 +1,4 @@
-package com.zireck.requestcache.library.util;
+package com.zireck.requestcache.library.util.serializer;
 
 import java.lang.reflect.Type;
 

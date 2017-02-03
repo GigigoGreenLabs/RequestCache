@@ -1,26 +1,30 @@
 package com.zireck.requestcache.library.executor;
 
-import android.util.Log;
 import com.zireck.requestcache.library.cache.RequestQueue;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.network.NetworkRequestManager;
 import com.zireck.requestcache.library.network.NetworkResponseCallback;
+import com.zireck.requestcache.library.util.logger.Logger;
+import com.zireck.requestcache.library.util.sleeper.Sleeper;
 
 public class PendingRequestsExecutor implements RequestExecutor, Runnable {
 
-  private static final String TAG = PendingRequestsExecutor.class.getSimpleName();
   private static final int DEFAULT_REQUEST_INTERVAL_IN_MILLIS = 5000;
 
-  private ThreadExecutor threadExecutor;
-  private long intervalTimeInMillis;
+  private final ThreadExecutor threadExecutor;
   private final NetworkRequestManager networkRequestManager;
+  private final Logger logger;
+  private final Sleeper sleeper;
+  private long intervalTimeInMillis;
   private boolean isExecuting = false;
   private RequestQueue requestQueue;
 
   public PendingRequestsExecutor(ThreadExecutor threadExecutor,
-      NetworkRequestManager networkRequestManager) {
+      NetworkRequestManager networkRequestManager, Logger logger, Sleeper sleeper) {
     this.threadExecutor = threadExecutor;
     this.networkRequestManager = networkRequestManager;
+    this.logger = logger;
+    this.sleeper = sleeper;
     this.intervalTimeInMillis = DEFAULT_REQUEST_INTERVAL_IN_MILLIS;
   }
 
@@ -38,7 +42,7 @@ public class PendingRequestsExecutor implements RequestExecutor, Runnable {
 
   @Override public boolean execute(RequestQueue requestQueue) {
     if (requestQueue == null) {
-      Log.e(TAG, "Invalid request list given");
+      logger.e("Invalid request list given");
       return false;
     }
 
@@ -57,7 +61,7 @@ public class PendingRequestsExecutor implements RequestExecutor, Runnable {
     if (requestQueue.isEmpty() || !requestQueue.hasNext()) {
       requestQueue.persistToDisk();
       isExecuting = false;
-      Log.d(TAG, "No pending requests left.");
+      logger.d("No pending requests left.");
       return;
     }
 
@@ -88,7 +92,7 @@ public class PendingRequestsExecutor implements RequestExecutor, Runnable {
 
   private void sleep(long intervalTimeInMillis) {
     try {
-      Thread.sleep(intervalTimeInMillis);
+      sleeper.sleep(intervalTimeInMillis);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

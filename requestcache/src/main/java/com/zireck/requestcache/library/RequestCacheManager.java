@@ -3,7 +3,6 @@ package com.zireck.requestcache.library;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import com.zireck.requestcache.library.cache.RequestQueue;
 import com.zireck.requestcache.library.cache.sqlite.SqliteQueue;
 import com.zireck.requestcache.library.executor.JobExecutor;
@@ -15,18 +14,22 @@ import com.zireck.requestcache.library.network.ApiService;
 import com.zireck.requestcache.library.network.ApiServiceBuilder;
 import com.zireck.requestcache.library.network.NetworkRequestManager;
 import com.zireck.requestcache.library.network.RetrofitNetworkRequestManager;
-import com.zireck.requestcache.library.util.GsonSerializer;
-import com.zireck.requestcache.library.util.JsonSerializer;
+import com.zireck.requestcache.library.util.logger.AndroidLogger;
+import com.zireck.requestcache.library.util.serializer.GsonSerializer;
+import com.zireck.requestcache.library.util.serializer.JsonSerializer;
+import com.zireck.requestcache.library.util.logger.Logger;
+import com.zireck.requestcache.library.util.sleeper.Sleeper;
+import com.zireck.requestcache.library.util.sleeper.ThreadSleeper;
 import java.util.List;
 
 public class RequestCacheManager implements RequestCache {
-
-  private static final String TAG = RequestCacheManager.class.getSimpleName();
 
   private static RequestCacheManager INSTANCE = null;
 
   private final ThreadExecutor threadExecutor;
   private final SharedPreferences sharedPreferences;
+  private final Logger logger;
+  private final Sleeper sleeper;
   private final JsonSerializer jsonSerializer;
   private final RequestQueue requestQueue;
   private final ApiServiceBuilder apiServiceBuilder;
@@ -34,24 +37,26 @@ public class RequestCacheManager implements RequestCache {
   private final NetworkRequestManager networkRequestManager;
   private final RequestExecutor requestExecutor;
 
+  private RequestCacheManager(Context context) {
+    threadExecutor = JobExecutor.getInstance();
+    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+    logger = new AndroidLogger();
+    sleeper = new ThreadSleeper();
+    jsonSerializer = new GsonSerializer();
+    requestQueue = new SqliteQueue(context, jsonSerializer);
+    apiServiceBuilder = new ApiServiceBuilder();
+    apiService = apiServiceBuilder.build();
+    networkRequestManager = new RetrofitNetworkRequestManager(threadExecutor, apiService, logger);
+    requestExecutor =
+        new PendingRequestsExecutor(threadExecutor, networkRequestManager, logger, sleeper);
+  }
+
   public static RequestCacheManager getInstance(Context context) {
     if (INSTANCE == null) {
       INSTANCE = new RequestCacheManager(context);
     }
 
     return INSTANCE;
-  }
-
-  private RequestCacheManager(Context context) {
-    threadExecutor = JobExecutor.getInstance();
-    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-    jsonSerializer = new GsonSerializer();
-    //requestQueue = new SharedPreferencesQueue(sharedPreferences, jsonSerializer);
-    requestQueue = new SqliteQueue(context, jsonSerializer);
-    apiServiceBuilder = new ApiServiceBuilder();
-    apiService = apiServiceBuilder.build();
-    networkRequestManager = new RetrofitNetworkRequestManager(threadExecutor, apiService);
-    requestExecutor = new PendingRequestsExecutor(threadExecutor, networkRequestManager);
   }
 
   @Override public void setRequestIntervalTime(long intervalTimeInMillis) {
@@ -70,7 +75,7 @@ public class RequestCacheManager implements RequestCache {
 
   @Override public boolean sendPendingRequests() {
     if (requestExecutor.isExecuting()) {
-      Log.e(TAG, "RequestExecutor is already in progress. Try later.");
+      logger.e("RequestExecutor is already in progress. Try later.");
       return false;
     }
 

@@ -1,4 +1,4 @@
-package com.zireck.requestcache.library.util;
+package com.zireck.requestcache.library.util.serializer;
 
 import com.google.gson.Gson;
 import java.lang.reflect.Type;

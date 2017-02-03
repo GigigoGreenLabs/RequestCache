@@ -3,8 +3,9 @@ package com.zireck.requestcache.library.cache;
 import android.content.SharedPreferences;
 import com.zireck.requestcache.library.cache.sharedpreferences.SharedPreferencesQueue;
 import com.zireck.requestcache.library.model.RequestModel;
-import com.zireck.requestcache.library.util.GsonSerializer;
-import com.zireck.requestcache.library.util.JsonSerializer;
+import com.zireck.requestcache.library.util.serializer.GsonSerializer;
+import com.zireck.requestcache.library.util.serializer.JsonSerializer;
+import com.zireck.requestcache.library.util.logger.Logger;
 import com.zireck.requestcache.library.util.MethodType;
 import java.util.ArrayList;
 import org.junit.Before;
@@ -17,7 +18,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -29,12 +29,14 @@ import static org.mockito.Mockito.when;
   private SharedPreferencesQueue sharedPreferencesQueue;
 
   @Mock private SharedPreferences mockSharedPreferences;
+  @Mock private Logger logger;
   private JsonSerializer jsonSerializer;
 
   @Before public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     jsonSerializer = new GsonSerializer();
-    sharedPreferencesQueue = new SharedPreferencesQueue(mockSharedPreferences, jsonSerializer);
+    sharedPreferencesQueue =
+        new SharedPreferencesQueue(mockSharedPreferences, logger, jsonSerializer);
   }
 
   @Test public void shouldNotHaveNextItemWhenQueueIsEmpty() throws Exception {
