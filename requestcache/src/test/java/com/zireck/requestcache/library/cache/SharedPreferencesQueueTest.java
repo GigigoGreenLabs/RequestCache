@@ -1,7 +1,7 @@
 package com.zireck.requestcache.library.cache;
 
 import android.content.SharedPreferences;
-import com.google.gson.Gson;
+import com.zireck.requestcache.library.cache.sharedpreferences.SharedPreferencesQueue;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.util.GsonSerializer;
 import com.zireck.requestcache.library.util.JsonSerializer;

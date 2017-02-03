@@ -1,5 +1,7 @@
 package com.zireck.requestcache.library.cache;
 
-public interface RequestQueue extends IterableQueue, PersistableQueue {
+import com.zireck.requestcache.library.model.RequestModel;
+
+public interface RequestQueue extends IterableQueue<RequestModel>, PersistableQueue {
 
 }

@@ -1,8 +1,9 @@
-package com.zireck.requestcache.library.cache;
+package com.zireck.requestcache.library.cache.sharedpreferences;
 
 import android.content.SharedPreferences;
 import android.util.Log;
 import com.google.gson.reflect.TypeToken;
+import com.zireck.requestcache.library.cache.RequestQueue;
 import com.zireck.requestcache.library.model.RequestModel;
 import com.zireck.requestcache.library.util.JsonSerializer;
 import java.lang.reflect.Type;
@@ -54,12 +55,12 @@ public class SharedPreferencesQueue implements RequestQueue {
     }
   }
 
-  @Override public boolean persistToDisk() {
+  @Override public void persistToDisk() {
     String pendingRequestQueueString = jsonSerializer.toJson(pendingRequestQueue);
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putString(KEY_PENDING_REQUEST_QUEUE, pendingRequestQueueString);
 
-    return editor.commit();
+    editor.apply();
   }
 
   @Override public boolean hasNext() {

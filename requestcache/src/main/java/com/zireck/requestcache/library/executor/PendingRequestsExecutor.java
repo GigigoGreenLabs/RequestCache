@@ -55,6 +55,7 @@ public class PendingRequestsExecutor implements RequestExecutor, Runnable {
 
   private void executeNextPendingRequest() {
     if (requestQueue.isEmpty() || !requestQueue.hasNext()) {
+      requestQueue.persistToDisk();
       isExecuting = false;
       Log.d(TAG, "No pending requests left.");
       return;
@@ -78,7 +79,6 @@ public class PendingRequestsExecutor implements RequestExecutor, Runnable {
 
   private void handleSuccessfulResponse() {
     requestQueue.remove();
-    requestQueue.persistToDisk();
     executeNextPendingRequest();
   }
 

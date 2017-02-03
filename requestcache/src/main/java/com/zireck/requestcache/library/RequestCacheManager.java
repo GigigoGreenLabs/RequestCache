@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import com.zireck.requestcache.library.cache.RequestQueue;
-import com.zireck.requestcache.library.cache.SharedPreferencesQueue;
+import com.zireck.requestcache.library.cache.sqlite.SqliteQueue;
 import com.zireck.requestcache.library.executor.JobExecutor;
 import com.zireck.requestcache.library.executor.PendingRequestsExecutor;
 import com.zireck.requestcache.library.executor.RequestExecutor;
@@ -46,7 +46,8 @@ public class RequestCacheManager implements RequestCache {
     threadExecutor = JobExecutor.getInstance();
     sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     jsonSerializer = new GsonSerializer();
-    requestQueue = new SharedPreferencesQueue(sharedPreferences, jsonSerializer);
+    //requestQueue = new SharedPreferencesQueue(sharedPreferences, jsonSerializer);
+    requestQueue = new SqliteQueue(context, jsonSerializer);
     apiServiceBuilder = new ApiServiceBuilder();
     apiService = apiServiceBuilder.build();
     networkRequestManager = new RetrofitNetworkRequestManager(threadExecutor, apiService);

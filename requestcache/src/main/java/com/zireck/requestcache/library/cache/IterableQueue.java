@@ -3,10 +3,10 @@ package com.zireck.requestcache.library.cache;
 import com.zireck.requestcache.library.model.RequestModel;
 import java.util.List;
 
-interface IterableQueue {
+interface IterableQueue<T> {
   boolean isEmpty();
-  void add(RequestModel requestModel);
-  void add(List<RequestModel> requestModels);
+  void add(T element);
+  void add(List<T> elements);
   boolean hasNext();
   RequestModel next();
   void remove();
