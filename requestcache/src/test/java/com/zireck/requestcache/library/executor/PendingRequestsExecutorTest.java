@@ -73,6 +73,7 @@ import static org.mockito.Mockito.when;
     verify(mockRequestQueue).loadToMemory();
     verify(mockRequestQueue).isEmpty();
     verify(mockRequestQueue, atMost(1)).hasNext();
+    verify(mockRequestQueue, times(1)).persistToDisk();
     verifyNoMoreInteractions(mockRequestQueue);
     assertThat(pendingRequestsExecutor.isExecuting(), is(false));
   }
@@ -123,8 +124,8 @@ import static org.mockito.Mockito.when;
         networkResponseCallbackArgumentCaptor.capture());
     networkResponseCallbackArgumentCaptor.getValue().onSuccess();
     inOrder.verify(mockRequestQueue).remove();
-    inOrder.verify(mockRequestQueue).persistToDisk();
     inOrder.verify(mockRequestQueue).isEmpty();
+    inOrder.verify(mockRequestQueue).persistToDisk();
     verifyNoMoreInteractions(mockRequestQueue);
   }
 

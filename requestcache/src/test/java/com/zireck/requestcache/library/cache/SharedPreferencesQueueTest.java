@@ -86,15 +86,14 @@ import static org.mockito.Mockito.when;
     requestModels.add(getSomeRequestModel());
     sharedPreferencesQueue.add(requestModels);
     sharedPreferencesQueue.add(getSomeRequestModel());
-    boolean persistResult = sharedPreferencesQueue.persistToDisk();
+    sharedPreferencesQueue.persistToDisk();
 
     verify(mockSharedPreferences).edit();
     requestModels.add(getSomeRequestModel());
     String requestModelListString = jsonSerializer.toJson(requestModels);
     verify(mockSharedPreferencesEditor).putString("PENDING_REQUEST_QUEUE", requestModelListString);
-    verify(mockSharedPreferencesEditor).commit();
+    verify(mockSharedPreferencesEditor).apply();
     verifyNoMoreInteractions(mockSharedPreferences, mockSharedPreferencesEditor);
-    assertThat(persistResult, is(true));
   }
 
   private RequestModel getSomeRequestModel() {
