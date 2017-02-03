@@ -21,9 +21,11 @@ import org.mockito.stubbing.Answer;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -131,6 +133,25 @@ import static org.mockito.Mockito.when;
     inOrder.verify(mockRequestQueue).isEmpty();
     inOrder.verify(mockRequestQueue).persistToDisk();
     verifyNoMoreInteractions(mockRequestQueue);
+  }
+
+  @Test public void shouldAbortExecutionWhenCancelling() throws Exception {
+    ArgumentCaptor<NetworkResponseCallback> networkResponseCallbackArgumentCaptor =
+        ArgumentCaptor.forClass(NetworkResponseCallback.class);
+    RequestQueue mockRequestQueue = mock(RequestQueue.class);
+    when(mockRequestQueue.isEmpty()).thenReturn(false);
+    when(mockRequestQueue.hasNext()).thenReturn(true);
+
+    pendingRequestsExecutor.execute(mockRequestQueue);
+    pendingRequestsExecutor.run();
+    pendingRequestsExecutor.cancel();
+    verify(mockNetworkRequestManager).sendRequest(any(RequestModel.class),
+        networkResponseCallbackArgumentCaptor.capture());
+    networkResponseCallbackArgumentCaptor.getValue().onSuccess();
+
+    verify(logger).d("Aborting pending request executor.");
+    boolean executing = pendingRequestsExecutor.isExecuting();
+    assertThat(executing, is(false));
   }
 
   private RequestModel getSomeRequestModel() {

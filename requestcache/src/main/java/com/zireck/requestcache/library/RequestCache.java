@@ -8,5 +8,6 @@ public interface RequestCache {
   void enqueueRequest(RequestModel requestModel);
   void enqueueRequests(List<RequestModel> requestModels);
   boolean sendPendingRequests();
+  void cancel();
   void clearRequestsCache();
 }

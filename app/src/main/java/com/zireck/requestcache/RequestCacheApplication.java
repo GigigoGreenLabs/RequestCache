@@ -1,6 +1,7 @@
 package com.zireck.requestcache;
 
 import android.app.Application;
+import com.facebook.stetho.Stetho;
 import com.zireck.requestcache.di.ApplicationComponent;
 import com.zireck.requestcache.di.ApplicationModule;
 import com.zireck.requestcache.di.DaggerApplicationComponent;
@@ -11,6 +12,7 @@ public class RequestCacheApplication extends Application {
 
   @Override public void onCreate() {
     super.onCreate();
+    Stetho.initializeWithDefaults(this);
     initComponent();
   }
 

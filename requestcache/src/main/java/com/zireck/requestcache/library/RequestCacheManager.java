@@ -82,6 +82,10 @@ public class RequestCacheManager implements RequestCache {
     return requestExecutor.execute(requestQueue);
   }
 
+  @Override public void cancel() {
+    requestExecutor.cancel();
+  }
+
   @Override public void clearRequestsCache() {
     requestQueue.clear();
   }

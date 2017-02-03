@@ -5,7 +5,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
-import com.facebook.stetho.Stetho;
 import com.zireck.requestcache.R;
 import com.zireck.requestcache.RequestCacheApplication;
 import com.zireck.requestcache.library.RequestCache;
@@ -20,13 +19,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
   @Inject RequestCache requestCache;
   private Button enqueueView;
   private Button sendView;
+  private Button cancelView;
   private Button clearView;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
-
-    Stetho.initializeWithDefaults(this);
 
     ((RequestCacheApplication) getApplication()).getComponent().inject(this);
 
@@ -36,10 +34,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
   private void initUi() {
     enqueueView = (Button) findViewById(R.id.enqueue);
     sendView = (Button) findViewById(R.id.send);
+    cancelView = (Button) findViewById(R.id.cancel);
     clearView = (Button) findViewById(R.id.clear);
 
     enqueueView.setOnClickListener(this);
     sendView.setOnClickListener(this);
+    cancelView.setOnClickListener(this);
     clearView.setOnClickListener(this);
   }
 
@@ -50,6 +50,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     } else if (view == sendView) {
       showAlertWith("Sending pending requests");
       requestCache.sendPendingRequests();
+    } else if (view == cancelView) {
+      requestCache.cancel();
     } else if (view == clearView) {
       showAlertWith("Clear request cache");
       requestCache.clearRequestsCache();

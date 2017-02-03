@@ -17,6 +17,7 @@ public class PendingRequestsExecutor implements RequestExecutor, Runnable {
   private final Sleeper sleeper;
   private long intervalTimeInMillis;
   private boolean isExecuting = false;
+  private boolean abortExecution = false;
   private RequestQueue requestQueue;
 
   public PendingRequestsExecutor(ThreadExecutor threadExecutor,
@@ -52,12 +53,24 @@ public class PendingRequestsExecutor implements RequestExecutor, Runnable {
     return true;
   }
 
+  @Override public void cancel() {
+    abortExecution = true;
+  }
+
   @Override public void run() {
     this.requestQueue.loadToMemory();
+    abortExecution = false;
     executeNextPendingRequest();
   }
 
   private void executeNextPendingRequest() {
+    if (abortExecution) {
+      abortExecution = false;
+      isExecuting = false;
+      logger.d("Aborting pending request executor.");
+      return;
+    }
+
     if (requestQueue.isEmpty() || !requestQueue.hasNext()) {
       requestQueue.persistToDisk();
       isExecuting = false;
@@ -67,26 +80,24 @@ public class PendingRequestsExecutor implements RequestExecutor, Runnable {
 
     isExecuting = true;
 
-    sleep(intervalTimeInMillis);
-
     RequestModel requestModel = requestQueue.next();
     networkRequestManager.sendRequest(requestModel, new NetworkResponseCallback() {
       @Override public void onSuccess() {
-        handleSuccessfulResponse();
+        processResponse(true);
       }
 
       @Override public void onFailure() {
-        handleUnsuccessfulResponse();
+        processResponse(false);
       }
     });
   }
 
-  private void handleSuccessfulResponse() {
-    requestQueue.remove();
-    executeNextPendingRequest();
-  }
+  private void processResponse(boolean isSuccessful) {
+    if (isSuccessful) {
+      requestQueue.remove();
+    }
 
-  private void handleUnsuccessfulResponse() {
+    sleep(intervalTimeInMillis);
     executeNextPendingRequest();
   }
 
